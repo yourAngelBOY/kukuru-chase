@@ -39,4 +39,4 @@ if you are using a mobile phone, there will automatically be an on-screen contro
 
 ## develop the game
 
-if you're feeling adventurous, then go ahead and play around with the code. since everything is contained in one file, open the file in your text editor and edit the values as you see fit. for example, if you want to become invincible, find the `health` variable and change it to `999`. have fun!
+if you're feeling adventurous, then go ahead and play around with the code. since everything is contained in one file, open the file in your text editor and edit the values as you see fit. for example, if you want to become invincible, find the `health` variable and change it to 999. have fun!
