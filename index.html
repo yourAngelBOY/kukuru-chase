@@ -1,1657 +1,1497 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>kukuru chase</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #050a14;
-            --ui-color: #aaddff;
-            --text-color: #ffffff;
-            --accent-color: #00ffff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            text-transform: lowercase;
-            font-family: 'VT323', monospace;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        body {
-            background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            color: var(--text-color);
-            overflow: hidden;
-            touch-action: none;
-        }
-
-        #ui {
-            width: 100%;
-            padding: 10px 15px;
-            background: var(--bg-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 22px;
-            z-index: 10;
-            border-bottom: 2px solid var(--ui-color);
-            flex-shrink: 0;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-
-        .stat-group {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .stat-block {
-            text-shadow: 0 0 2px var(--text-color);
-        }
-
-        .stat-label {
-            color: var(--ui-color);
-            margin-right: 5px;
-        }
-
-        .health-bar {
-            width: 120px;
-            height: 16px;
-            background: #001122;
-            border: 2px solid var(--text-color);
-            margin-top: 2px;
-        }
-
-        .health-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ffff, #ffffff);
-            transition: width 0.1s;
-        }
-
-        .dash-bar {
-            width: 120px;
-            height: 6px;
-            background: #001122;
-            margin-top: 4px;
-            border: 1px solid #555;
-        }
-
-        .dash-fill {
-            height: 100%;
-            background: #ff00ff;
-            width: 100%;
-            transition: width 0.1s;
-        }
-
-        #muteBtn {
-            cursor: pointer;
-            font-size: 24px;
-            padding: 5px;
-            color: var(--accent-color);
-        }
-
-        #gameContainer {
-            position: relative;
-            flex-grow: 1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: var(--bg-color);
-            overflow: hidden;
-        }
-
-        canvas {
-            display: block;
-            image-rendering: pixelated;
-        }
-
-        #mobileControls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 20;
-            display: none;
-        }
-
-        #mobileControls.show {
-            display: block;
-        }
-
-        .dpad {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 160px;
-            height: 160px;
-            pointer-events: auto;
-        }
-
-        .dpad-button {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(170, 221, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(2px);
-        }
-
-        .dpad-button:active {
-            background: rgba(255, 255, 255, 0.3);
-            color: #fff;
-            border-color: #fff;
-        }
-
-        .dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
-        .dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .dpad-left { left: 0; top: 50%; transform: translateY(-50%); }
-        .dpad-right { right: 0; top: 50%; transform: translateY(-50%); }
-
-        .action-group {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            pointer-events: auto;
-        }
-
-        .action-btn {
-            width: 70px;
-            height: 70px;
-            border: 2px solid var(--accent-color);
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: var(--accent-color);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(2px);
-        }
-
-        .action-btn:active {
-            transform: scale(0.95);
-            background: rgba(0, 255, 255, 0.2);
-        }
-
-        .action-fill {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 255, 255, 0.3);
-            z-index: 0;
-            transition: height 0.1s linear;
-        }
-
-        .action-label {
-            z-index: 1;
-            text-align: center;
-            line-height: 1;
-            font-weight: bold;
-        }
-
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(5, 10, 20, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            pointer-events: auto;
-            overflow-y: auto;
-            padding: 20px;
-            z-index: 30;
-        }
-
-        #overlay.hidden {
-            display: none;
-        }
-
-        .title {
-            font-size: 72px;
-            color: #fff;
-            text-shadow: 0 0 10px #00ffff, 4px 4px 0px #0055aa;
-            margin-bottom: 20px;
-            text-align: center;
-            letter-spacing: 2px;
-            line-height: 0.8;
-        }
-
-        .button {
-            background: var(--bg-color);
-            color: var(--ui-color);
-            border: 2px solid var(--ui-color);
-            padding: 12px 40px;
-            font-size: 28px;
-            cursor: pointer;
-            margin: 10px;
-            transition: all 0.1s;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
-        }
-
-        .button:hover {
-            background: var(--ui-color);
-            color: var(--bg-color);
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-        }
-
-        .button:active {
-            transform: scale(0.95);
-        }
-
-        .seed-container {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .seed-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            color: var(--accent-color);
-        }
-
-        input[type="text"] {
-            background: var(--bg-color);
-            border: 2px solid var(--accent-color);
-            color: var(--text-color);
-            padding: 8px;
-            font-family: inherit;
-            font-size: 20px;
-            text-align: center;
-            width: 200px;
-            outline: none;
-        }
-
-        input[type="checkbox"] {
-            accent-color: var(--accent-color);
-            width: 24px;
-            height: 24px;
-        }
-
-        .upgrade-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 20px;
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .upgrade-card {
-            background: rgba(0, 20, 40, 0.8);
-            border: 2px solid #335577;
-            padding: 15px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upgrade-card:hover {
-            border-color: var(--ui-color);
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-
-        .upgrade-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .upgrade-name {
-            font-size: 24px;
-            color: var(--ui-color);
-        }
-
-        .upgrade-type {
-            font-size: 16px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #333;
-        }
-
-        .upgrade-desc {
-            font-size: 18px;
-            color: #aaa;
-            line-height: 1.2;
-        }
-
-        .type-active { color: #ff00ff; border: 1px solid #ff00ff; }
-        .type-passive { color: #00ffff; border: 1px solid #00ffff; }
-
-        .theme-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-            max-width: 600px;
-            width: 100%;
-        }
-
-        .theme-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            border: 2px solid #333;
-            cursor: pointer;
-            background: #000;
-            color: #fff;
-        }
-
-        .theme-btn.active {
-            border-color: var(--ui-color);
-            box-shadow: 0 0 15px var(--ui-color);
-        }
-
-        .theme-btn.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: #333;
-        }
-
-        .results-row {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-        }
-
-        .screen-content {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .screen-content.active {
-            display: flex;
-        }
-
-        #activeItemDisplay {
-            position: absolute;
-            top: 60px;
-            right: 15px;
-            text-align: right;
-            pointer-events: none;
-        }
-
-        .active-icon {
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--accent-color);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.5);
-            margin-left: 10px;
-            font-size: 20px;
-        }
-
-        @media (min-width: 768px) {
-            .upgrade-grid { grid-template-columns: repeat(3, 1fr); max-width: none; }
-            .theme-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>kukuru chase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg-color: #050a14;
+--ui-color: #aaddff;
+--text-color: #ffffff;
+--accent-color: #00ffff;
+}
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+-webkit-tap-highlight-color: transparent;
+text-transform: lowercase;
+font-family: 'VT323', monospace;
+user-select: none;
+-webkit-user-select: none;
+}
+body {
+background: var(--bg-color);
+display: flex;
+flex-direction: column;
+height: 100vh;
+height: 100dvh;
+color: var(--text-color);
+overflow: hidden;
+touch-action: none;
+}
+#ui {
+width: 100%;
+padding: 10px 15px;
+background: var(--bg-color);
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-size: 22px;
+z-index: 10;
+border-bottom: 2px solid var(--ui-color);
+flex-shrink: 0;
+box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+.stat-group {
+display: flex;
+gap: 20px;
+align-items: center;
+}
+.stat-block {
+text-shadow: 0 0 2px var(--text-color);
+}
+.stat-label {
+color: var(--ui-color);
+margin-right: 5px;
+}
+.health-bar {
+width: 120px;
+height: 16px;
+background: #001122;
+border: 2px solid var(--text-color);
+margin-top: 2px;
+}
+.health-fill {
+height: 100%;
+background: linear-gradient(90deg, #00ffff, #ffffff);
+transition: width 0.1s;
+}
+.dash-bar {
+width: 120px;
+height: 6px;
+background: #001122;
+margin-top: 4px;
+border: 1px solid #555;
+}
+.dash-fill {
+height: 100%;
+background: #ff00ff;
+width: 100%;
+transition: width 0.1s;
+}
+#muteBtn {
+cursor: pointer;
+font-size: 24px;
+padding: 5px;
+color: var(--accent-color);
+}
+#gameContainer {
+position: relative;
+flex-grow: 1;
+width: 100%;
+display: flex;
+justify-content: center;
+align-items: center;
+background: var(--bg-color);
+overflow: hidden;
+}
+canvas {
+display: block;
+image-rendering: pixelated;
+}
+#mobileControls {
+position: absolute;
+bottom: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+z-index: 20;
+display: none;
+}
+#mobileControls.show {
+display: block;
+}
+.dpad {
+position: absolute;
+bottom: 20px;
+left: 20px;
+width: 160px;
+height: 160px;
+pointer-events: auto;
+}
+.dpad-button {
+position: absolute;
+width: 50px;
+height: 50px;
+background: rgba(255, 255, 255, 0.05);
+border: 2px solid rgba(170, 221, 255, 0.5);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+color: rgba(255, 255, 255, 0.7);
+backdrop-filter: blur(2px);
+}
+.dpad-button:active {
+background: rgba(255, 255, 255, 0.3);
+color: #fff;
+border-color: #fff;
+}
+.dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
+.dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+.dpad-left { left: 0; top: 50%; transform: translateY(-50%); }
+.dpad-right { right: 0; top: 50%; transform: translateY(-50%); }
+.action-group {
+position: absolute;
+bottom: 20px;
+right: 20px;
+display: flex;
+gap: 15px;
+align-items: flex-end;
+pointer-events: auto;
+}
+.action-btn {
+width: 70px;
+height: 70px;
+border: 2px solid var(--accent-color);
+border-radius: 50%;
+background: rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+color: var(--accent-color);
+position: relative;
+overflow: hidden;
+backdrop-filter: blur(2px);
+}
+.action-btn:active {
+transform: scale(0.95);
+background: rgba(0, 255, 255, 0.2);
+}
+.action-fill {
+position: absolute;
+bottom: 0;
+left: 0;
+width: 100%;
+background: rgba(0, 255, 255, 0.3);
+z-index: 0;
+transition: height 0.1s linear;
+}
+.action-label {
+z-index: 1;
+text-align: center;
+line-height: 1;
+font-weight: bold;
+}
+#overlay {
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(5, 10, 20, 0.95);
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+pointer-events: auto;
+overflow-y: auto;
+padding: 20px;
+z-index: 30;
+}
+#overlay.hidden {
+display: none;
+}
+.title {
+font-size: 72px;
+color: #fff;
+text-shadow: 0 0 10px #00ffff, 4px 4px 0px #0055aa;
+margin-bottom: 20px;
+text-align: center;
+letter-spacing: 2px;
+line-height: 0.8;
+}
+.button {
+background: var(--bg-color);
+color: var(--ui-color);
+border: 2px solid var(--ui-color);
+padding: 12px 40px;
+font-size: 28px;
+cursor: pointer;
+margin: 10px;
+transition: all 0.1s;
+box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+}
+.button:hover {
+background: var(--ui-color);
+color: var(--bg-color);
+box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+}
+.button:active {
+transform: scale(0.95);
+}
+.seed-container {
+margin: 20px 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 10px;
+}
+.seed-row {
+display: flex;
+align-items: center;
+gap: 10px;
+font-size: 24px;
+color: var(--accent-color);
+}
+input[type="text"] {
+background: var(--bg-color);
+border: 2px solid var(--accent-color);
+color: var(--text-color);
+padding: 8px;
+font-family: inherit;
+font-size: 20px;
+text-align: center;
+width: 200px;
+outline: none;
+}
+input[type="checkbox"] {
+accent-color: var(--accent-color);
+width: 24px;
+height: 24px;
+}
+.upgrade-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 15px;
+margin-top: 20px;
+max-width: 800px;
+width: 100%;
+}
+.upgrade-card {
+background: rgba(0, 20, 40, 0.8);
+border: 2px solid #335577;
+padding: 15px;
+cursor: pointer;
+text-align: left;
+transition: all 0.2s;
+position: relative;
+overflow: hidden;
+}
+.upgrade-card:hover {
+border-color: var(--ui-color);
+transform: translateY(-2px);
+box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+.upgrade-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 5px;
+}
+.upgrade-name {
+font-size: 24px;
+color: var(--ui-color);
+}
+.upgrade-type {
+font-size: 16px;
+padding: 2px 6px;
+border-radius: 4px;
+background: #333;
+}
+.upgrade-desc {
+font-size: 18px;
+color: #aaa;
+line-height: 1.2;
+}
+.type-active { color: #ff00ff; border: 1px solid #ff00ff; }
+.type-passive { color: #00ffff; border: 1px solid #00ffff; }
+.theme-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 15px;
+margin-top: 20px;
+max-width: 600px;
+width: 100%;
+}
+.theme-btn {
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 15px;
+border: 2px solid #333;
+cursor: pointer;
+background: #000;
+color: #fff;
+}
+.theme-btn.active {
+border-color: var(--ui-color);
+box-shadow: 0 0 15px var(--ui-color);
+}
+.theme-btn.locked {
+opacity: 0.5;
+cursor: not-allowed;
+border-color: #333;
+}
+.results-row {
+display: flex;
+gap: 15px;
+margin-top: 25px;
+}
+.screen-content {
+display: none;
+flex-direction: column;
+align-items: center;
+width: 100%;
+}
+.screen-content.active {
+display: flex;
+}
+#activeItemDisplay {
+position: absolute;
+top: 60px;
+right: 15px;
+text-align: right;
+pointer-events: none;
+}
+.active-icon {
+width: 40px;
+height: 40px;
+border: 2px solid var(--accent-color);
+display: inline-flex;
+align-items: center;
+justify-content: center;
+background: rgba(0, 0, 0, 0.5);
+margin-left: 10px;
+font-size: 20px;
+}
+@media (min-width: 768px) {
+.upgrade-grid { grid-template-columns: repeat(3, 1fr); max-width: none; }
+.theme-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
 </head>
 <body>
-    <div id="ui">
-        <div class="stat-group">
-            <div class="stat-block"><span class="stat-label">floor</span><span id="floor">1</span></div>
-            <div class="stat-block"><span class="stat-label">score</span><span id="score">0</span></div>
-        </div>
-        <div class="stat-group">
-            <div class="stat-block" style="display:flex; flex-direction:column; align-items:flex-end;">
-                <div style="font-size:16px; color:#aaa;">hp <span id="hp">5</span>/<span id="maxHp">5</span></div>
-                <div class="health-bar"><div class="health-fill" id="healthFill" style="width: 100%;"></div></div>
-                <div class="dash-bar"><div class="dash-fill" id="dashFill"></div></div>
-            </div>
-            <div id="muteBtn" onclick="audio.toggle()">🔊</div>
-        </div>
-    </div>
-
-    <div id="activeItemDisplay">
-        <div style="font-size:14px; color:#aaa;">active</div>
-        <div style="display:flex; align-items:center; justify-content:flex-end;">
-            <span id="activeName" style="color:var(--accent-color);">none</span>
-            <div class="active-icon" id="activeIcon">-</div>
-        </div>
-    </div>
-
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="mobileControls">
-            <div class="dpad">
-                <div class="dpad-button dpad-up" data-dir="up">▲</div>
-                <div class="dpad-button dpad-down" data-dir="down">▼</div>
-                <div class="dpad-button dpad-left" data-dir="left">◀</div>
-                <div class="dpad-button dpad-right" data-dir="right">▶</div>
-            </div>
-            <div class="action-group">
-                <div class="action-btn" id="btnDash">
-                    <div class="action-fill" id="fillDash"></div>
-                    <div class="action-label">DASH</div>
-                </div>
-                <div class="action-btn" id="btnUlt" style="border-color:#ff00ff; color:#ff00ff; opacity: 0.5;">
-                    <div class="action-fill" id="fillUlt" style="background:rgba(255,0,255,0.3);"></div>
-                    <div class="action-label">ULT</div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="overlay">
-            <div class="title">kukuru chase</div>
-            
-            <div id="menuContent" class="screen-content active">
-                <div style="margin-bottom: 10px; color: #888;">high score: <span id="menuHighScore">0</span></div>
-                <div class="seed-container">
-                    <div class="seed-row">
-                        <input type="checkbox" id="randomSeed" checked onchange="game.toggleSeedInput()">
-                        <label for="randomSeed">randomize seed</label>
-                    </div>
-                    <input type="text" id="seedInput" placeholder="enter seed" disabled>
-                </div>
-                <button class="button" onclick="game.startGame()">start run</button>
-                <button class="button" onclick="game.openThemes()">themes</button>
-                <div style="margin-top:10px; font-size:16px; color:#888;">space=dash, e=ultimate</div>
-            </div>
-
-            <div id="themeContent" class="screen-content">
-                <div style="font-size: 24px; margin-bottom: 10px;">select theme</div>
-                <div style="font-size: 16px; color: #888; margin-bottom: 20px;">unlock new themes every 10k score</div>
-                <div id="themeGrid" class="theme-grid"></div>
-                <button class="button" onclick="game.showScreen('menuContent')" style="margin-top: 20px;">back</button>
-            </div>
-
-            <div id="gameOverContent" class="screen-content" style="text-align:center;">
-                <div style="font-size: 40px; color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000;">game over</div>
-                <div style="font-size: 26px; color: var(--ui-color); margin-bottom: 5px;">score: <span id="finalScore">0</span></div>
-                <div style="font-size: 26px; color: var(--accent-color); margin-bottom: 5px;">floor: <span id="finalFloor">1</span></div>
-                <div style="font-size: 26px; color: #fff; margin-bottom: 5px;">time: <span id="finalTime">00:00</span></div>
-                <div style="font-size: 26px; color: #888; margin-bottom: 20px;">hits taken: <span id="finalHits">0</span></div>
-                
-                <div class="results-row">
-                    <button class="button" onclick="game.shareResults()">share</button>
-                    <button class="button" onclick="game.downloadResults()">download jpg</button>
-                </div>
-                <button class="button" onclick="game.showScreen('menuContent')" style="margin-top: 20px; border-color: #888; color: #888;">main menu</button>
-            </div>
-
-            <div id="upgradeContent" class="screen-content"></div>
-        </div>
-    </div>
-
-    <script>
-        const THEMES = [
-            { id: 'winter', name: 'winter', score: 0, colors: { bg: '#050a14', wall: '#4488aa', ui: '#aaddff', text: '#ffffff', accent: '#00ffff', pellet: '#ffffff', power: '#00ffff', ghosts: ['#ff0000', '#ffb8ff', '#00ffff', '#ffb852'] } },
-            { id: 'classic', name: 'classic', score: 10000, colors: { bg: '#000000', wall: '#1919a6', ui: '#ffff00', text: '#ffffff', accent: '#ff0000', pellet: '#ffb8ae', power: '#ffb8ae', ghosts: ['#ff0000', '#ffb8ff', '#00ffff', '#ffb852'] } },
-            { id: 'gameboy', name: 'gameboy', score: 20000, colors: { bg: '#0f380f', wall: '#306230', ui: '#8bac0f', text: '#9bbc0f', accent: '#306230', pellet: '#8bac0f', power: '#9bbc0f', ghosts: ['#306230', '#306230', '#306230', '#306230'] } },
-            { id: 'matrix', name: 'matrix', score: 30000, colors: { bg: '#000000', wall: '#003300', ui: '#00ff00', text: '#00ff00', accent: '#008800', pellet: '#00ff00', power: '#ffffff', ghosts: ['#00ff00', '#00ff00', '#00ff00', '#00ff00'] } },
-            { id: 'vapor', name: 'vapor', score: 40000, colors: { bg: '#2b0f54', wall: '#ff00ff', ui: '#00ffff', text: '#ff71ce', accent: '#01cdfe', pellet: '#fff', power: '#00ffff', ghosts: ['#ff71ce', '#01cdfe', '#05ffa1', '#b967ff'] } },
-            { id: 'hotline', name: 'hotline', score: 50000, colors: { bg: '#000000', wall: '#ff0055', ui: '#00ffff', text: '#ffffff', accent: '#ff0055', pellet: '#ffff00', power: '#00ffff', ghosts: ['#ff0055', '#00ffff', '#ff0055', '#00ffff'] } }
-        ];
-
-        class AudioController {
-            constructor() {
-                this.ctx = null;
-                this.masterGain = null;
-                this.enabled = true;
-                this.musicTimer = null;
-                this.nextNoteTime = 0;
-                this.beatCount = 0;
-            }
-
-            init() {
-                if (this.ctx) return;
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                this.ctx = new AudioContext();
-                this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.value = 0.25;
-                this.masterGain.connect(this.ctx.destination);
-            }
-
-            toggle() {
-                this.enabled = !this.enabled;
-                document.getElementById('muteBtn').innerText = this.enabled ? '🔊' : '🔇';
-                if(this.ctx) {
-                    if(this.enabled) { this.ctx.resume(); this.startMusic(); } 
-                    else { this.ctx.suspend(); clearTimeout(this.musicTimer); }
-                }
-            }
-
-            playTone(freq, type, duration, vol=0.5, slideTo=null) {
-                if (!this.enabled || !this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                if(slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                osc.connect(gain); gain.connect(this.masterGain);
-                osc.start(); osc.stop(this.ctx.currentTime + duration);
-            }
-
-            playNoise(duration, vol=0.2) {
-                if (!this.enabled || !this.ctx) return;
-                const bufferSize = this.ctx.sampleRate * duration;
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                const noise = this.ctx.createBufferSource();
-                noise.buffer = buffer;
-                const gain = this.ctx.createGain();
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                noise.connect(gain); gain.connect(this.masterGain);
-                noise.start();
-            }
-
-            playKick() {
-                this.playTone(150, 'sine', 0.1, 0.8, 0.01);
-                this.playTone(50, 'square', 0.05, 0.2, 0.01);
-            }
-
-            playSnare() {
-                this.playNoise(0.15, 0.3);
-                this.playTone(200, 'triangle', 0.05, 0.2);
-            }
-
-            playHat() {
-                this.playNoise(0.05, 0.1);
-            }
-
-            playBass(freq) {
-                this.playTone(freq, 'triangle', 0.2, 0.3);
-                this.playTone(freq/2, 'sine', 0.2, 0.4);
-            }
-
-            sfxEat() { this.playTone(400, 'triangle', 0.05, 0.2); }
-            sfxPower() { this.playTone(600, 'sine', 0.4, 0.3, 1200); }
-            sfxGhostDeath() { this.playTone(800, 'square', 0.1, 0.4, 100); setTimeout(()=>this.playTone(400, 'square', 0.1, 0.4, 50), 100); }
-            sfxDamage() { this.playTone(150, 'sawtooth', 0.3, 0.5, 50); }
-            sfxWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.2, 0.3), i*100)); }
-            sfxDie() { this.playTone(300, 'sawtooth', 1.0, 0.5, 50); }
-            sfxDash() { this.playNoise(0.1); this.playTone(200, 'sawtooth', 0.1, 0.3, 600); }
-            sfxUlt() { this.playTone(880, 'square', 0.5, 0.4, 220); }
-
-            startMusic() {
-                if(!this.enabled || !this.ctx) return;
-                this.nextNoteTime = this.ctx.currentTime;
-                this.beatCount = 0;
-                this.scheduleMusic();
-            }
-
-            scheduleMusic() {
-                if(!this.enabled) return;
-                const tempo = 0.13;
-                const lookahead = 0.1; 
-                
-                while (this.nextNoteTime < this.ctx.currentTime + lookahead) {
-                    const step = this.beatCount % 16;
-                    
-                    if (step % 4 === 0) this.playKick();
-                    if (step % 8 === 4) this.playSnare();
-                    if (step % 2 === 0) this.playHat();
-                    
-                    const bassNotes = [55, 55, 55, 55, 49, 49, 52, 52]; 
-                    if (step % 2 === 0) {
-                        const note = bassNotes[Math.floor(step/2) % 8];
-                        this.playBass(note);
-                    }
-
-                    this.nextNoteTime += tempo;
-                    this.beatCount++;
-                }
-                this.musicTimer = setTimeout(() => this.scheduleMusic(), 25);
-            }
-        }
-        const audio = new AudioController();
-
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        function resizeCanvas() {
-            const container = document.getElementById('gameContainer');
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-        }
-        window.addEventListener('load', resizeCanvas);
-        window.addEventListener('resize', resizeCanvas);
-        
-        if (isMobile) document.getElementById('mobileControls').classList.add('show');
-
-        const TILE_SIZE = 18;
-        const MAZE_WIDTH = 20; 
-        const MAZE_HEIGHT = 20;
-
-        function xmur3(str) {
-            for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
-                h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-                h = h << 13 | h >>> 19;
-            }
-            return function() {
-                h = Math.imul(h ^ h >>> 16, 2246822507);
-                h = Math.imul(h ^ h >>> 13, 3266489909);
-                return (h ^= h >>> 16) >>> 0;
-            }
-        }
-
-        function mulberry32(a) {
-            return function() {
-                var t = a += 0x6D2B79F5;
-                t = Math.imul(t ^ t >>> 15, t | 1);
-                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-                return ((t ^ t >>> 14) >>> 0) / 4294967296;
-            }
-        }
-
-        const CARDS = {
-            phase: { name: "phase shift", type: "active", cd: 25, desc: "walk through walls for 3s", onUse: (g) => { g.player.intangible = 3; g.player.colorOverride = '#ffffff'; } },
-            nuke: { name: "the nuke", type: "active", cd: 90, desc: "kill all ghosts (no score)", onUse: (g) => { g.ghosts.forEach(gh => { gh.dead = true; gh.respawnTimer = 8; g.particles.push({x:gh.x*TILE_SIZE, y:gh.y*TILE_SIZE, vx:0, vy:0, life:1, color:'#fff'}); }); g.shake = 2; } },
-            timelock: { name: "time lock", type: "active", cd: 45, desc: "freeze ghosts for 5s", onUse: (g) => { g.timeStop = 5; } },
-            blink: { name: "blink dagger", type: "active", cd: 12, desc: "teleport 4 tiles", onUse: (g) => { const dx = g.player.dirX * 4, dy = g.player.dirY * 4; let tx = g.player.x + dx, ty = g.player.y + dy; if(tx>1 && tx<MAZE_WIDTH-1 && ty>1 && ty<MAZE_HEIGHT-1 && g.maze[Math.round(ty)][Math.round(tx)] !== 1) { g.player.x = tx; g.player.y = ty; g.particles.push({x:tx*TILE_SIZE, y:ty*TILE_SIZE, vx:0, vy:0, life:0.5, color:'#0ff'}); } } },
-            decoy: { name: "decoy holo", type: "active", cd: 30, desc: "spawn clone for 8s", onUse: (g) => { g.entities.push({type:'decoy', x:g.player.x, y:g.player.y, life:8}); } },
-            repulsor: { name: "repulsor", type: "active", cd: 20, desc: "push ghosts away", onUse: (g) => { g.ghosts.forEach(gh => { const dx = gh.x - g.player.x, dy = gh.y - g.player.y; const dist = Math.hypot(dx, dy); if(dist < 8) { const force = 5/dist; gh.x += dx*force; gh.y += dy*force; gh.stun = 2; } }); } },
-            berserk: { name: "berserk", type: "active", cd: 60, desc: "power mode for 4s", onUse: (g) => { g.player.powerMode = true; g.player.powerTimer = 4; g.ghosts.forEach(gh => gh.scaredTimer = 4); } },
-            blackhole: { name: "black hole", type: "active", cd: 50, desc: "suck ghosts in", onUse: (g) => { g.entities.push({type:'blackhole', x:g.player.x, y:g.player.y, life:4}); } },
-            mine: { name: "mine layer", type: "active", cd: 20, desc: "drop explosive mine", onUse: (g) => { g.entities.push({type:'mine', x:g.player.x, y:g.player.y, life:999}); } },
-            swap: { name: "swap strike", type: "active", cd: 25, desc: "swap with nearest ghost", onUse: (g) => { let n = null, d = 999; g.ghosts.forEach(gh => { const dist = Math.hypot(gh.x - g.player.x, gh.y - g.player.y); if(dist < d) { d = dist; n = gh; } }); if(n) { const tx = g.player.x, ty = g.player.y; g.player.x = n.x; g.player.y = n.y; n.x = tx; n.y = ty; n.stun = 2; } } },
-            overclock: { name: "overclock", type: "active", cd: 40, desc: "2x speed for 5s", onUse: (g) => { g.player.speedBuff = 5; } },
-            
-            turbo: { name: "turbo engine", type: "passive", desc: "+15% speed", apply: (p) => p.stats.speed *= 1.15 },
-            spiked: { name: "spiked tires", type: "passive", desc: "ignore ice/mud", apply: (p) => p.stats.ignoreTerrain = true },
-            afterburner: { name: "afterburner", type: "passive", desc: "accel over time", apply: (p) => p.stats.accel = true },
-            hover: { name: "hoverboard", type: "passive", desc: "immune to hazards", apply: (p) => p.stats.hover = true },
-            strafer: { name: "strafer", type: "passive", desc: "faster horizontal move", apply: (p) => p.stats.strafe = true },
-            brakes: { name: "brakes", type: "passive", desc: "instant stop", apply: (p) => p.stats.friction = 0.5 },
-            teledash: { name: "tele-dash", type: "passive", desc: "2x dash distance", apply: (p) => p.stats.dashDist *= 2 },
-            thorns: { name: "thorns", type: "passive", desc: "damage touching ghosts", apply: (p) => p.stats.thorns = true },
-            shield: { name: "energy shield", type: "passive", desc: "block 1 hit/floor", apply: (p) => p.stats.shield = true },
-            vamp: { name: "vampirism", type: "passive", desc: "kill ghost = +0.5hp", apply: (p) => p.stats.vamp = true },
-            adren: { name: "adrenaline", type: "passive", desc: "low hp = fast", apply: (p) => p.stats.adrenaline = true },
-            guardian: { name: "guardian", type: "passive", desc: "orb blocks ghosts", apply: (p) => p.stats.guardian = true },
-            shock: { name: "shock touch", type: "passive", desc: "stun on touch", apply: (p) => p.stats.shock = true },
-            phoenix: { name: "phoenix", type: "passive", desc: "revive 1/run", apply: (p) => p.stats.revive = true },
-            iron: { name: "iron skin", type: "passive", desc: "+2 max hp", apply: (p) => { p.maxHealth += 2; p.health += 2; } },
-            glass: { name: "glass cannon", type: "passive", desc: "1hp, x10 score", apply: (p) => { p.maxHealth = 1; p.health = 1; p.stats.scoreMult *= 10; } },
-            avenger: { name: "avenger", type: "passive", desc: "dmg = nuke nearby", apply: (p) => p.stats.avenger = true },
-            blue: { name: "blue chip", type: "passive", desc: "+50 chips/pellet", apply: (p) => p.stats.baseChips += 50 },
-            red: { name: "red chip", type: "passive", desc: "+2 mult", apply: (p) => p.stats.baseMult += 2 },
-            gold: { name: "gold chip", type: "passive", desc: "x1.5 mult", apply: (p) => p.stats.finalMult *= 1.5 },
-            combo: { name: "combo master", type: "passive", desc: "+0.1 mult/pellet", apply: (p) => p.stats.combo = true },
-            hunter: { name: "ghost hunter", type: "passive", desc: "x2 mult for kills", apply: (p) => p.stats.hunter = true },
-            pacifist: { name: "pacifist", type: "passive", desc: "x3 mult if no kills", apply: (p) => p.stats.pacifist = true },
-            speeddemon: { name: "speed demon", type: "passive", desc: "score x velocity", apply: (p) => p.stats.speedScore = true },
-            greed: { name: "greed", type: "passive", desc: "time = score", apply: (p) => p.stats.greed = true },
-            collector: { name: "collector", type: "passive", desc: "+1 mult/card", apply: (p) => p.stats.collector = true },
-            risk: { name: "risk taker", type: "passive", desc: "x4 mult, fast ghosts", apply: (p) => { p.stats.finalMult *= 4; p.stats.ghostSpeed *= 1.2; } },
-            interest: { name: "interest", type: "passive", desc: "+10% score/floor", apply: (p) => p.stats.interest = true },
-            jackpot: { name: "jackpot", type: "passive", desc: "1% chance x100 mult", apply: (p) => p.stats.jackpot = true },
-            blood: { name: "blood money", type: "passive", desc: "-1hp, x5 mult", apply: (p) => { p.health -= 1; p.stats.finalMult *= 5; } },
-            consist: { name: "consistency", type: "passive", desc: "x1.2 mult/clean floor", apply: (p) => p.stats.consistency = true },
-            magnet: { name: "magnet", type: "passive", desc: "attract pellets", apply: (p) => p.stats.magnet = true },
-            battery: { name: "battery", type: "passive", desc: "-25% cooldowns", apply: (p) => p.stats.cdr = 0.75 },
-            midas: { name: "midas touch", type: "passive", desc: "power pellets = gold", apply: (p) => p.stats.midas = true },
-            scavenger: { name: "scavenger", type: "passive", desc: "ghosts drop hp", apply: (p) => p.stats.scavenger = true },
-            tiny: { name: "tiny mode", type: "passive", desc: "small size", apply: (p) => p.stats.size = 0.7 },
-            big: { name: "big mode", type: "passive", desc: "big size, crush walls", apply: (p) => { p.stats.size = 1.3; p.stats.crush = true; p.stats.speed *= 0.8; } },
-            glitch: { name: "glitch", type: "passive", desc: "random colors, x1.5 score", apply: (p) => { p.stats.glitch = true; p.stats.scoreMult *= 1.5; } }
-        };
-
-        class PathFinder {
-            static find(sx, sy, ex, ey, maze) {
-                if(ex<0 || ex>=MAZE_WIDTH || ey<0 || ey>=MAZE_HEIGHT || maze[ey][ex]===1) return null;
-                const start = {x:sx, y:sy, g:0, h:0, f:0, p:null};
-                const open = [start];
-                const closed = new Uint8Array(MAZE_WIDTH*MAZE_HEIGHT);
-                let iters = 0;
-                while(open.length > 0 && iters++ < 250) {
-                    let low = 0;
-                    for(let i=1; i<open.length; i++) if(open[i].f < open[low].f) low = i;
-                    let cur = open[low];
-                    if(cur.x === ex && cur.y === ey) {
-                        const path = [];
-                        while(cur.p) { path.push({x:cur.x, y:cur.y}); cur = cur.p; }
-                        return path.reverse();
-                    }
-                    open.splice(low, 1);
-                    closed[cur.y*MAZE_WIDTH + cur.x] = 1;
-                    const dirs = [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}];
-                    for(let d of dirs) {
-                        const nx = cur.x + d.x, ny = cur.y + d.y;
-                        if(nx>=0 && nx<MAZE_WIDTH && ny>=0 && ny<MAZE_HEIGHT && maze[ny][nx]!==1 && !closed[ny*MAZE_WIDTH+nx]) {
-                            const g = cur.g + 1;
-                            let n = open.find(o => o.x===nx && o.y===ny);
-                            if(!n) {
-                                n = {x:nx, y:ny, g:g, h:Math.abs(nx-ex)+Math.abs(ny-ey), f:0, p:cur};
-                                n.f = n.g + n.h; open.push(n);
-                            } else if(g < n.g) { n.g = g; n.f = n.g + n.h; n.p = cur; }
-                        }
-                    }
-                }
-                return null;
-            }
-        }
-
-        class Ghost {
-            constructor(x, y, type, floor, colors) {
-                this.x = x; this.y = y;
-                this.startX = x; this.startY = y;
-                this.type = type % 4;
-                this.colors = colors;
-                const configs = [{ speed: 1.05 }, { speed: 1.0 }, { speed: 0.95 }, { speed: 0.9 }];
-                this.config = configs[this.type];
-                this.baseSpeed = this.config.speed * (1 + floor * 0.02);
-                this.dir = {x:0, y:0};
-                this.nextTile = {x: Math.round(x), y: Math.round(y)};
-                this.mode = 'scatter';
-                this.scaredTimer = 0;
-                this.dead = false;
-                this.respawnTimer = 0;
-                this.stun = 0;
-            }
-
-            update(dt, player, maze, gameTime, pelletsLeft, totalPellets, rng, entities) {
-                if (this.dead) {
-                    this.respawnTimer -= dt;
-                    if (this.respawnTimer <= 0) {
-                        this.dead = false;
-                        this.x = this.startX; this.y = this.startY;
-                        this.nextTile = {x: Math.round(this.x), y: Math.round(this.y)};
-                    }
-                    return;
-                }
-                if (this.stun > 0) { this.stun -= dt; return; }
-                if (this.scaredTimer > 0) { this.scaredTimer -= dt; this.mode = 'frightened'; } 
-                else { this.mode = (gameTime % 12 < 5) ? 'scatter' : 'chase'; }
-
-                let speed = this.baseSpeed * 4.0 * player.stats.ghostSpeed;
-                if (this.mode === 'frightened') speed *= 0.6;
-                else if (this.type === 0 && this.mode === 'chase') {
-                    const ratio = pelletsLeft / totalPellets;
-                    if (ratio < 0.1) speed *= 1.2; else if (ratio < 0.3) speed *= 1.1;
-                }
-
-                const tileType = maze[Math.round(this.y)][Math.round(this.x)];
-                if(tileType === 2) speed *= 1.2;
-                if(tileType === 3) speed *= 0.8;
-                
-                speed = Math.min(speed, 7.0);
-
-                const moveDist = speed * dt;
-                const dx = this.nextTile.x - this.x;
-                const dy = this.nextTile.y - this.y;
-                const distToNext = Math.hypot(dx, dy);
-
-                if (distToNext > moveDist) {
-                    this.x += (dx / distToNext) * moveDist;
-                    this.y += (dy / distToNext) * moveDist;
-                } else {
-                    this.x = this.nextTile.x; this.y = this.nextTile.y;
-                    const remaining = moveDist - distToNext;
-                    this.decideNext(player, maze, rng, entities);
-                    if (this.dir.x !== 0 || this.dir.y !== 0) {
-                        this.x += this.dir.x * remaining;
-                        this.y += this.dir.y * remaining;
-                        this.nextTile.x = Math.round(this.x) + this.dir.x;
-                        this.nextTile.y = Math.round(this.y) + this.dir.y;
-                    }
-                }
-            }
-
-            decideNext(player, maze, rng, entities) {
-                const cx = Math.round(this.x);
-                const cy = Math.round(this.y);
-                let tx = player.x, ty = player.y;
-                
-                const decoy = entities.find(e => e.type === 'decoy');
-                if(decoy) { tx = decoy.x; ty = decoy.y; }
-
-                if (this.mode === 'scatter' && !decoy) {
-                    if(this.type===0) { tx=MAZE_WIDTH-2; ty=1; }
-                    if(this.type===1) { tx=1; ty=1; }
-                    if(this.type===2) { tx=MAZE_WIDTH-2; ty=MAZE_HEIGHT-2; }
-                    if(this.type===3) { tx=1; ty=MAZE_HEIGHT-2; }
-                } else if (this.mode === 'frightened') {
-                    tx = Math.floor(rng()*MAZE_WIDTH);
-                    ty = Math.floor(rng()*MAZE_HEIGHT);
-                } else if (!decoy) {
-                    if (this.type === 1) { tx += player.dirX * 4; ty += player.dirY * 4; }
-                    else if (this.type === 3) { if (Math.hypot(cx-tx, cy-ty) < 8) { tx=1; ty=MAZE_HEIGHT-2; } }
-                }
-                const dirs = [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}];
-                let valid = dirs.filter(d => {
-                    if (maze[cy+d.y][cx+d.x] === 1) return false;
-                    if (d.x === -this.dir.x && d.y === -this.dir.y) return false;
-                    return true;
-                });
-                if (valid.length === 0) valid = dirs.filter(d => maze[cy+d.y][cx+d.x] !== 1);
-                let bestDir = {x:0, y:0};
-                if (this.mode === 'frightened') {
-                    bestDir = valid[Math.floor(rng() * valid.length)];
-                } else {
-                    if (this.type === 0 && rng() < 0.3) {
-                        const path = PathFinder.find(cx, cy, Math.round(tx), Math.round(ty), maze);
-                        if (path && path.length > 0) bestDir = {x: path[0].x - cx, y: path[0].y - cy};
-                        else {
-                            let minDist = Infinity;
-                            for (let d of valid) {
-                                const dist = (cx+d.x-tx)**2 + (cy+d.y-ty)**2;
-                                if (dist < minDist) { minDist = dist; bestDir = d; }
-                            }
-                        }
-                    } else {
-                        let minDist = Infinity;
-                        for (let d of valid) {
-                            const dist = (cx+d.x-tx)**2 + (cy+d.y-ty)**2;
-                            if (dist < minDist) { minDist = dist; bestDir = d; }
-                        }
-                    }
-                }
-                this.dir = bestDir || {x:0, y:0};
-                this.nextTile = {x: cx + this.dir.x, y: cy + this.dir.y};
-            }
-
-            draw(ctx, ox, oy) {
-                if (this.dead) return;
-                const sx = ox + this.x * TILE_SIZE;
-                const sy = oy + this.y * TILE_SIZE;
-                ctx.fillStyle = (this.mode === 'frightened') ? (Math.floor(Date.now()/200)%2 ? '#fff' : '#22f') : this.colors[this.type];
-                ctx.beginPath();
-                ctx.arc(sx + TILE_SIZE/2, sy + TILE_SIZE/2 - 2, TILE_SIZE/2 - 1, Math.PI, 0);
-                ctx.lineTo(sx + TILE_SIZE - 1, sy + TILE_SIZE - 1);
-                ctx.lineTo(sx + 1, sy + TILE_SIZE - 1);
-                ctx.fill();
-                if (this.mode !== 'frightened') {
-                    ctx.fillStyle = '#fff';
-                    const ex = this.dir.x * 2; const ey = this.dir.y * 2;
-                    ctx.beginPath(); ctx.arc(sx+7+ex, sy+8+ey, 3, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(sx+13+ex, sy+8+ey, 3, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#000';
-                    ctx.beginPath(); ctx.arc(sx+7+ex+this.dir.x, sy+8+ey+this.dir.y, 1.5, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(sx+13+ex+this.dir.x, sy+8+ey+this.dir.y, 1.5, 0, Math.PI*2); ctx.fill();
-                }
-            }
-        }
-
-        class Game {
-            constructor() {
-                this.state = 'menu';
-                this.floor = 1; this.score = 0;
-                this.camera = {x:0, y:0};
-                this.gameTime = 0;
-                this.startTime = 0;
-                this.hitsTaken = 0;
-                this.rng = Math.random;
-                this.seed = "";
-                this.shake = 0;
-                this.highScore = parseInt(localStorage.getItem('mazeRunnerHighScore')) || 0;
-                this.currentThemeIndex = parseInt(localStorage.getItem('mazeRunnerTheme')) || 0;
-                this.colors = THEMES[this.currentThemeIndex].colors;
-                
-                this.player = {
-                    x: 10, y: 10, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0,
-                    health: 5, maxHealth: 5,
-                    powerMode: false, powerTimer: 0, invulnTimer: 0,
-                    dashCooldown: 0, activeItem: null, activeCooldown: 0,
-                    intangible: 0, speedBuff: 0, colorOverride: null,
-                    stats: {
-                        speed: 1.0, ignoreTerrain: false, accel: false, hover: false, strafe: false, friction: 0.9,
-                        dashDist: 1.0, thorns: false, shield: false, vamp: false, adrenaline: false, guardian: false,
-                        shock: false, revive: false, avenger: false, baseChips: 0, baseMult: 1, finalMult: 1,
-                        combo: false, hunter: false, pacifist: false, speedScore: false, greed: false, collector: false,
-                        ghostSpeed: 1.0, interest: false, jackpot: false, consistency: false, magnet: false, cdr: 1.0,
-                        midas: false, scavenger: false, size: 1.0, crush: false, glitch: false, scoreMult: 1.0
-                    },
-                    cards: []
-                };
-                this.keys = {};
-                this.entities = [];
-                this.timeStop = 0;
-                this.setupInput();
-                this.applyTheme(this.currentThemeIndex);
-                document.getElementById('menuHighScore').innerText = this.highScore;
-            }
-            
-            applyTheme(index) {
-                this.currentThemeIndex = index;
-                this.colors = THEMES[index].colors;
-                localStorage.setItem('mazeRunnerTheme', index);
-                
-                const root = document.documentElement;
-                root.style.setProperty('--bg-color', this.colors.bg);
-                root.style.setProperty('--ui-color', this.colors.ui);
-                root.style.setProperty('--text-color', this.colors.text);
-                root.style.setProperty('--accent-color', this.colors.accent);
-            }
-            
-            openThemes() {
-                const grid = document.getElementById('themeGrid');
-                grid.innerHTML = '';
-                THEMES.forEach((theme, index) => {
-                    const locked = this.highScore < theme.score;
-                    const btn = document.createElement('div');
-                    btn.className = `theme-btn ${index === this.currentThemeIndex ? 'active' : ''} ${locked ? 'locked' : ''}`;
-                    btn.innerHTML = `
-                        <div style="font-size:20px; color:${theme.colors.ui}">${theme.name}</div>
-                        <div style="font-size:14px; color:#888">${locked ? `locked (${theme.score/1000}k)` : 'unlocked'}</div>
-                    `;
-                    if(!locked) btn.onclick = () => {
-                        this.applyTheme(index);
-                        this.openThemes(); 
-                    };
-                    grid.appendChild(btn);
-                });
-                this.showScreen('themeContent');
-            }
-
-            toggleSeedInput() {
-                const check = document.getElementById('randomSeed');
-                const input = document.getElementById('seedInput');
-                input.disabled = check.checked;
-                if(check.checked) input.value = '';
-            }
-
-            showScreen(id) {
-                document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-                document.getElementById('overlay').classList.remove('hidden');
-            }
-
-            setupInput() {
-                window.addEventListener('keydown', e => {
-                    this.keys[e.key] = true;
-                    if (this.state === 'playing') {
-                        if(e.key==='ArrowUp'||e.key==='w') { this.player.nextDirX=0; this.player.nextDirY=-1; }
-                        if(e.key==='ArrowDown'||e.key==='s') { this.player.nextDirX=0; this.player.nextDirY=1; }
-                        if(e.key==='ArrowLeft'||e.key==='a') { this.player.nextDirX=-1; this.player.nextDirY=0; }
-                        if(e.key==='ArrowRight'||e.key==='d') { this.player.nextDirX=1; this.player.nextDirY=0; }
-                        if(e.key===' ' && this.player.dashCooldown <= 0) this.dash();
-                        if(e.key==='e' || e.key==='E') this.useActive();
-                    }
-                });
-                window.addEventListener('keyup', e => this.keys[e.key] = false);
-                
-                const handleDpad = (dir) => {
-                    if(dir==='up') { this.player.nextDirX=0; this.player.nextDirY=-1; }
-                    if(dir==='down') { this.player.nextDirX=0; this.player.nextDirY=1; }
-                    if(dir==='left') { this.player.nextDirX=-1; this.player.nextDirY=0; }
-                    if(dir==='right') { this.player.nextDirX=1; this.player.nextDirY=0; }
-                };
-
-                document.querySelectorAll('.dpad-button').forEach(b => {
-                    b.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        handleDpad(b.dataset.dir);
-                    });
-                    b.addEventListener('mousedown', (e) => {
-                        e.preventDefault();
-                        handleDpad(b.dataset.dir);
-                    });
-                });
-                
-                const dashBtn = document.getElementById('btnDash');
-                const ultBtn = document.getElementById('btnUlt');
-
-                const handleDash = (e) => {
-                    e.preventDefault();
-                    if(this.player.dashCooldown <= 0) this.dash();
-                };
-                dashBtn.addEventListener('touchstart', handleDash);
-                dashBtn.addEventListener('mousedown', handleDash);
-
-                const handleUlt = (e) => {
-                    e.preventDefault();
-                    this.useActive();
-                };
-                ultBtn.addEventListener('touchstart', handleUlt);
-                ultBtn.addEventListener('mousedown', handleUlt);
-
-                let tx=0, ty=0;
-                canvas.addEventListener('touchstart', e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; });
-                canvas.addEventListener('touchend', e => {
-                    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
-                    if(Math.abs(dx) > 30 || Math.abs(dy) > 30) {
-                        if(Math.abs(dx) > Math.abs(dy)) { this.player.nextDirX = dx>0?1:-1; this.player.nextDirY = 0; }
-                        else { this.player.nextDirX = 0; this.player.nextDirY = dy>0?1:-1; }
-                    }
-                });
-            }
-
-            dash() {
-                if(this.player.dirX === 0 && this.player.dirY === 0) return;
-                this.player.dashCooldown = 3.0;
-                this.player.invulnTimer = 0.5;
-                audio.sfxDash();
-                
-                const dashDist = 3 * this.player.stats.dashDist;
-                for(let i=0; i<dashDist; i++) {
-                    const nx = this.player.x + this.player.dirX;
-                    const ny = this.player.y + this.player.dirY;
-                    if(this.maze[Math.round(ny)][Math.round(nx)] !== 1 || this.player.intangible > 0) {
-                        this.player.x = nx; this.player.y = ny;
-                        this.particles.push({x:nx*TILE_SIZE, y:ny*TILE_SIZE, vx:0, vy:0, life:0.5, color:'#ff00ff'});
-                    } else break;
-                }
-            }
-
-            useActive() {
-                if(this.player.activeItem && this.player.activeCooldown <= 0) {
-                    const card = CARDS[this.player.activeItem];
-                    if(card) {
-                        card.onUse(this);
-                        this.player.activeCooldown = card.cd * this.player.stats.cdr;
-                        audio.sfxUlt();
-                    }
-                }
-            }
-
-            startGame() {
-                audio.init(); audio.startMusic();
-                const randomCheck = document.getElementById('randomSeed');
-                const seedInput = document.getElementById('seedInput');
-                
-                if(randomCheck.checked) {
-                    this.seed = Math.random().toString(36).substring(7);
-                } else {
-                    this.seed = seedInput.value || "maze";
-                }
-                
-                const seedHash = xmur3(this.seed);
-                this.rng = mulberry32(seedHash());
-                
-                this.floor = 1; this.score = 0; this.hitsTaken = 0;
-                this.startTime = Date.now();
-                this.player = {
-                    x: 10, y: 10, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0,
-                    health: 5, maxHealth: 5,
-                    powerMode: false, powerTimer: 0, invulnTimer: 0,
-                    dashCooldown: 0, activeItem: null, activeCooldown: 0,
-                    intangible: 0, speedBuff: 0, colorOverride: null,
-                    stats: {
-                        speed: 1.0, ignoreTerrain: false, accel: false, hover: false, strafe: false, friction: 0.9,
-                        dashDist: 1.0, thorns: false, shield: false, vamp: false, adrenaline: false, guardian: false,
-                        shock: false, revive: false, avenger: false, baseChips: 0, baseMult: 1, finalMult: 1,
-                        combo: false, hunter: false, pacifist: false, speedScore: false, greed: false, collector: false,
-                        ghostSpeed: 1.0, interest: false, jackpot: false, consistency: false, magnet: false, cdr: 1.0,
-                        midas: false, scavenger: false, size: 1.0, crush: false, glitch: false, scoreMult: 1.0
-                    },
-                    cards: []
-                };
-                this.generateFloor();
-                this.state = 'playing';
-                document.getElementById('overlay').classList.add('hidden');
-                this.lastTime = Date.now();
-                this.loop();
-            }
-
-            generateFloor() {
-                this.player.health = this.player.maxHealth;
-                this.maze = [];
-                for(let y=0; y<MAZE_HEIGHT; y++) { this.maze[y] = []; for(let x=0; x<MAZE_WIDTH; x++) this.maze[y][x] = 1; }
-                const carve = (x, y) => {
-                    this.maze[y][x] = 0;
-                    const dirs = [[0,-2],[0,2],[-2,0],[2,0]].sort(()=>this.rng()-0.5);
-                    for(let [dx,dy] of dirs) {
-                        const nx=x+dx, ny=y+dy;
-                        if(nx>0 && nx<MAZE_WIDTH-1 && ny>0 && ny<MAZE_HEIGHT-1 && this.maze[ny][nx]===1) {
-                            this.maze[y+dy/2][x+dx/2] = 0;
-                            carve(nx, ny);
-                        }
-                    }
-                };
-                carve(1, 1);
-                for(let i=0; i<20; i++) {
-                    const x = Math.floor(this.rng()*(MAZE_WIDTH-2))+1;
-                    const y = Math.floor(this.rng()*(MAZE_HEIGHT-2))+1;
-                    if(this.maze[y][x]===1) this.maze[y][x]=0;
-                }
-                
-                const empties = [];
-                for(let y=1; y<MAZE_HEIGHT-1; y++) for(let x=1; x<MAZE_WIDTH-1; x++) if(this.maze[y][x]===0) empties.push({x,y});
-                
-                const start = empties[Math.floor(this.rng()*empties.length)];
-                this.player.x = start.x; this.player.y = start.y;
-                this.player.dirX = 0; this.player.dirY = 0;
-                if(this.player.stats.shield) this.player.shieldActive = true;
-                
-                const reachable = new Set();
-                const stack = [{x: start.x, y: start.y}];
-                reachable.add(`${start.x},${start.y}`);
-                while(stack.length) {
-                    const {x, y} = stack.pop();
-                    const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
-                    for(let [dx, dy] of dirs) {
-                        const nx = x+dx, ny = y+dy;
-                        if(nx>=0 && nx<MAZE_WIDTH && ny>=0 && ny<MAZE_HEIGHT && this.maze[ny][nx]!==1 && !reachable.has(`${nx},${ny}`)) {
-                            reachable.add(`${nx},${ny}`);
-                            stack.push({x:nx, y:ny});
-                        }
-                    }
-                }
-                
-                const validEmpties = empties.filter(p => reachable.has(`${p.x},${p.y}`));
-                
-                validEmpties.forEach(p => {
-                    const r = this.rng();
-                    if(r < 0.15) this.maze[p.y][p.x] = 2;
-                    else if(r < 0.3) this.maze[p.y][p.x] = 3;
-                });
-
-                this.pellets = []; this.powerPellets = [];
-                validEmpties.forEach(p => {
-                    if(Math.abs(p.x-start.x)>5 || Math.abs(p.y-start.y)>5) {
-                        if(this.rng() < 0.02) this.powerPellets.push(p);
-                        else this.pellets.push(p);
-                    }
-                });
-                this.totalPellets = this.pellets.length;
-                this.ghosts = [];
-                const count = 3 + Math.floor(this.floor/3);
-                for(let i=0; i<count; i++) {
-                    let pos;
-                    do { pos = validEmpties[Math.floor(this.rng()*validEmpties.length)]; } 
-                    while(Math.hypot(pos.x-start.x, pos.y-start.y) < 10);
-                    this.ghosts.push(new Ghost(pos.x, pos.y, i, this.floor, this.colors.ghosts));
-                }
-                this.particles = [];
-                this.entities = [];
-                this.combo = 0;
-                this.killsThisFloor = 0;
-                this.damageThisFloor = false;
-            }
-
-            update(dt) {
-                if(this.state !== 'playing') return;
-                this.gameTime += dt;
-                if(this.shake > 0) this.shake -= dt * 5;
-                if(this.player.dashCooldown > 0) this.player.dashCooldown -= dt;
-                if(this.player.activeCooldown > 0) this.player.activeCooldown -= dt;
-                if(this.player.intangible > 0) this.player.intangible -= dt;
-                if(this.player.speedBuff > 0) this.player.speedBuff -= dt;
-                if(this.timeStop > 0) this.timeStop -= dt;
-                
-                if(this.player.stats.vamp && this.player.health < this.player.maxHealth) this.player.health = Math.min(this.player.maxHealth, this.player.health);
-                
-                if(this.player.powerMode) {
-                    this.player.powerTimer -= dt;
-                    if(this.player.powerTimer <= 0) this.player.powerMode = false;
-                }
-                if(this.player.invulnTimer > 0) this.player.invulnTimer -= dt;
-                
-                const tileType = this.maze[Math.round(this.player.y)][Math.round(this.player.x)];
-                let terrainMod = 1.0;
-                if(!this.player.stats.ignoreTerrain) {
-                    if(tileType === 2) terrainMod = 1.2;
-                    if(tileType === 3) terrainMod = 0.8;
-                }
-
-                let baseSpeed = 4.5 * this.player.stats.speed * terrainMod;
-                if(this.player.stats.adrenaline) baseSpeed *= (1 + (1 - this.player.health/this.player.maxHealth) * 0.5);
-                if(this.player.speedBuff > 0) baseSpeed *= 2;
-                if(this.player.stats.size > 1.1) baseSpeed *= 0.8;
-                if(this.player.stats.strafe && this.player.dirY === 0) baseSpeed *= 1.3;
-
-                const speed = baseSpeed * dt;
-                
-                if(this.player.nextDirX !== 0 || this.player.nextDirY !== 0) {
-                    const cx = Math.round(this.player.x);
-                    const cy = Math.round(this.player.y);
-                    const dist = Math.hypot(this.player.x - cx, this.player.y - cy);
-                    if(dist < 0.2 && (this.maze[cy+this.player.nextDirY][cx+this.player.nextDirX] !== 1 || this.player.intangible > 0 || this.player.stats.crush)) {
-                        this.player.x = cx; this.player.y = cy;
-                        this.player.dirX = this.player.nextDirX;
-                        this.player.dirY = this.player.nextDirY;
-                        this.player.nextDirX = 0; this.player.nextDirY = 0;
-                    }
-                }
-                const nx = this.player.x + this.player.dirX * speed;
-                const ny = this.player.y + this.player.dirY * speed;
-                const checkX = Math.round(nx + this.player.dirX * 0.4);
-                const checkY = Math.round(ny + this.player.dirY * 0.4);
-                
-                if(this.maze[checkY][checkX] !== 1 || this.player.intangible > 0) { 
-                    this.player.x = nx; this.player.y = ny; 
-                } else if(this.player.stats.crush && this.maze[checkY][checkX] === 1) {
-                    this.maze[checkY][checkX] = 0;
-                    this.shake = 0.2;
-                    this.player.x = nx; this.player.y = ny;
-                } else { 
-                    this.player.x = Math.round(this.player.x); this.player.y = Math.round(this.player.y); 
-                }
-                
-                const px = Math.round(this.player.x), py = Math.round(this.player.y);
-                
-                if(this.player.stats.magnet) {
-                    this.pellets.forEach(p => {
-                        if(Math.hypot(p.x - this.player.x, p.y - this.player.y) < 3) {
-                            p.x += (this.player.x - p.x) * dt * 3;
-                            p.y += (this.player.y - p.y) * dt * 3;
-                        }
-                    });
-                }
-
-                for(let i=this.pellets.length-1; i>=0; i--) {
-                    if(Math.abs(this.pellets[i].x - this.player.x) < 0.5 && Math.abs(this.pellets[i].y - this.player.y) < 0.5) {
-                        this.pellets.splice(i, 1);
-                        let chips = 10 + this.player.stats.baseChips;
-                        let mult = 1 + this.player.stats.baseMult;
-                        if(this.player.stats.combo) mult += this.combo * 0.1;
-                        if(this.player.stats.jackpot && this.rng() < 0.01) mult *= 100;
-                        if(this.player.stats.speedScore) {
-                            const vel = Math.abs(this.player.dirX) + Math.abs(this.player.dirY);
-                            mult *= vel > 0 ? 2 : 1;
-                        }
-                        this.score += Math.floor(chips * mult * this.player.stats.finalMult * this.player.stats.scoreMult);
-                        this.combo++;
-                        audio.sfxEat();
-                    }
-                }
-                for(let i=this.powerPellets.length-1; i>=0; i--) {
-                    if(Math.abs(this.powerPellets[i].x - this.player.x) < 0.5 && Math.abs(this.powerPellets[i].y - this.player.y) < 0.5) {
-                        this.powerPellets.splice(i, 1);
-                        this.player.powerMode = true;
-                        this.player.powerTimer = 8;
-                        this.ghosts.forEach(g => g.scaredTimer = this.player.powerTimer);
-                        if(this.player.stats.midas) this.score += 500;
-                        audio.sfxPower();
-                    }
-                }
-                
-                if(this.timeStop <= 0) {
-                    this.ghosts.forEach(g => {
-                        g.update(dt, this.player, this.maze, this.gameTime, this.pellets.length, this.totalPellets, this.rng, this.entities);
-                        if(g.dead) return;
-                        if(Math.hypot(g.x - this.player.x, g.y - this.player.y) < (this.player.stats.size * 0.6)) {
-                            if(this.player.powerMode && g.mode === 'frightened') {
-                                g.dead = true; g.respawnTimer = 5;
-                                this.killsThisFloor++;
-                                let mult = 1;
-                                if(this.player.stats.hunter) mult = 2;
-                                this.score += Math.floor(200 * mult * this.player.stats.finalMult);
-                                if(this.player.stats.vamp) this.player.health = Math.min(this.player.maxHealth, this.player.health + 0.5);
-                                if(this.player.stats.scavenger && this.rng() < 0.2) this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
-                                this.shake = 0.5;
-                                audio.sfxGhostDeath();
-                                for(let k=0; k<10; k++) this.particles.push({x:g.x*TILE_SIZE, y:g.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:g.color});
-                            } else if(!g.dead && this.player.invulnTimer <= 0) {
-                                if(this.player.stats.thorns) {
-                                    g.stun = 2; g.dead = true; g.respawnTimer = 5; this.shake = 0.2;
-                                }
-                                if(this.player.stats.shock) {
-                                    g.stun = 1;
-                                }
-                                if(this.player.shieldActive) {
-                                    this.player.shieldActive = false;
-                                    this.player.invulnTimer = 1.5;
-                                    this.shake = 0.5;
-                                    audio.sfxDamage();
-                                } else {
-                                    this.player.health -= 1;
-                                    this.hitsTaken++;
-                                    this.damageThisFloor = true;
-                                    this.player.invulnTimer = 1.5;
-                                    this.shake = 1.0;
-                                    this.combo = 0;
-                                    if(this.player.stats.avenger) {
-                                        this.ghosts.forEach(gh => {
-                                            if(Math.hypot(gh.x - this.player.x, gh.y - this.player.y) < 5) {
-                                                gh.dead = true; gh.respawnTimer = 5;
-                                            }
-                                        });
-                                    }
-                                    audio.sfxDamage();
-                                    for(let k=0; k<15; k++) this.particles.push({x:this.player.x*TILE_SIZE, y:this.player.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:'#f00'});
-                                    if(this.player.health <= 0) {
-                                        if(this.player.stats.revive) {
-                                            this.player.health = 1;
-                                            this.player.stats.revive = false;
-                                            this.player.invulnTimer = 3;
-                                            this.shake = 2;
-                                            this.ghosts.forEach(gh => gh.stun = 3);
-                                        } else {
-                                            audio.sfxDie(); this.gameOver();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                if(this.pellets.length === 0) this.levelComplete();
-                
-                for(let i=this.particles.length-1; i>=0; i--) {
-                    let p = this.particles[i];
-                    p.x += p.vx; p.y += p.vy; p.life -= dt * 2;
-                    if(p.life <= 0) this.particles.splice(i, 1);
-                }
-                
-                for(let i=this.entities.length-1; i>=0; i--) {
-                    let e = this.entities[i];
-                    e.life -= dt;
-                    if(e.type === 'blackhole') {
-                        this.ghosts.forEach(g => {
-                            const dx = e.x - g.x, dy = e.y - g.y;
-                            const d = Math.hypot(dx, dy);
-                            if(d < 5 && d > 0.1) {
-                                g.x += dx * dt * 2;
-                                g.y += dy * dt * 2;
-                            }
-                        });
-                    }
-                    if(e.type === 'mine') {
-                        this.ghosts.forEach(g => {
-                            if(Math.hypot(e.x - g.x, e.y - g.y) < 1) {
-                                g.dead = true; g.respawnTimer = 5;
-                                e.life = 0;
-                                this.shake = 1;
-                                for(let k=0; k<10; k++) this.particles.push({x:e.x*TILE_SIZE, y:e.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:'#fa0'});
-                            }
-                        });
-                    }
-                    if(e.life <= 0) this.entities.splice(i, 1);
-                }
-
-                document.getElementById('score').innerText = this.score;
-                document.getElementById('floor').innerText = this.floor;
-                document.getElementById('hp').innerText = Math.ceil(this.player.health);
-                document.getElementById('maxHp').innerText = this.player.maxHealth;
-                document.getElementById('healthFill').style.width = (this.player.health/this.player.maxHealth*100)+'%';
-                document.getElementById('dashFill').style.width = Math.min(100, (1 - this.player.dashCooldown/3)*100)+'%';
-                
-                if(this.player.activeItem) {
-                    const card = CARDS[this.player.activeItem];
-                    document.getElementById('activeName').innerText = card.name;
-                    document.getElementById('activeIcon').innerText = Math.ceil(this.player.activeCooldown) > 0 ? Math.ceil(this.player.activeCooldown) : 'E';
-                    document.getElementById('fillUlt').style.height = (1 - (this.player.activeCooldown/card.cd))*100+'%';
-                    document.getElementById('btnUlt').style.opacity = this.player.activeCooldown <= 0 ? 1 : 0.5;
-                } else {
-                    document.getElementById('activeName').innerText = 'none';
-                    document.getElementById('activeIcon').innerText = '-';
-                    document.getElementById('fillUlt').style.height = '0%';
-                    document.getElementById('btnUlt').style.opacity = 0.5;
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = this.colors.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                if(this.state !== 'playing') return;
-                
-                const tx = this.player.x * TILE_SIZE - canvas.width/2;
-                const ty = this.player.y * TILE_SIZE - canvas.height/2;
-                this.camera.x += (tx - this.camera.x) * 0.1;
-                this.camera.y += (ty - this.camera.y) * 0.1;
-                
-                const mapPixelWidth = MAZE_WIDTH * TILE_SIZE;
-                const mapPixelHeight = MAZE_HEIGHT * TILE_SIZE;
-                
-                let ox = -this.camera.x;
-                let oy = -this.camera.y;
-                
-                if (mapPixelWidth < canvas.width) ox = (canvas.width - mapPixelWidth) / 2;
-                else ox = -Math.max(0, Math.min(this.camera.x, mapPixelWidth - canvas.width));
-                
-                if (mapPixelHeight < canvas.height) oy = (canvas.height - mapPixelHeight) / 2;
-                else oy = -Math.max(0, Math.min(this.camera.y, mapPixelHeight - canvas.height));
-                
-                if(this.shake > 0) {
-                    ox += (Math.random() - 0.5) * this.shake * 20;
-                    oy += (Math.random() - 0.5) * this.shake * 20;
-                }
-
-                const startX = Math.floor(-ox/TILE_SIZE), endX = startX + canvas.width/TILE_SIZE + 1;
-                const startY = Math.floor(-oy/TILE_SIZE), endY = startY + canvas.height/TILE_SIZE + 1;
-                
-                for(let y=startY; y<endY; y++) {
-                    for(let x=startX; x<endX; x++) {
-                        if(y>=0 && y<MAZE_HEIGHT && x>=0 && x<MAZE_WIDTH) {
-                            const sx = ox + x*TILE_SIZE, sy = oy + y*TILE_SIZE;
-                            const tile = this.maze[y][x];
-                            if(tile === 1) {
-                                ctx.strokeStyle = this.colors.wall; ctx.lineWidth = 2; ctx.strokeRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                            } else if(tile === 2) {
-                                ctx.fillStyle = 'rgba(0, 255, 255, 0.2)'; ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                            } else if(tile === 3) {
-                                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                            }
-                        }
-                    }
-                }
-                
-                ctx.fillStyle = this.colors.pellet;
-                this.pellets.forEach(p => {
-                    const sx = ox + p.x*TILE_SIZE + TILE_SIZE/2, sy = oy + p.y*TILE_SIZE + TILE_SIZE/2;
-                    if(sx>-10 && sx<canvas.width+10 && sy>-10 && sy<canvas.height+10) {
-                        ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 7); ctx.fill();
-                    }
-                });
-                
-                const pulse = Math.sin(Date.now()/150)*2;
-                this.powerPellets.forEach(p => {
-                    const sx = ox + p.x*TILE_SIZE + TILE_SIZE/2, sy = oy + p.y*TILE_SIZE + TILE_SIZE/2;
-                    ctx.fillStyle = this.colors.power; ctx.shadowBlur = 10; ctx.shadowColor = this.colors.power;
-                    ctx.beginPath(); ctx.arc(sx, sy, 6+pulse, 0, 7); ctx.fill();
-                    ctx.shadowBlur = 0;
-                });
-                
-                this.entities.forEach(e => {
-                    const sx = ox + e.x*TILE_SIZE + TILE_SIZE/2, sy = oy + e.y*TILE_SIZE + TILE_SIZE/2;
-                    if(e.type === 'decoy') {
-                        ctx.fillStyle = '#0ff'; ctx.globalAlpha = 0.6;
-                        ctx.beginPath(); ctx.arc(sx, sy, TILE_SIZE/2, 0, 7); ctx.fill();
-                        ctx.globalAlpha = 1;
-                    }
-                    if(e.type === 'blackhole') {
-                        ctx.fillStyle = '#000'; ctx.strokeStyle = '#f0f'; ctx.lineWidth = 2;
-                        ctx.beginPath(); ctx.arc(sx, sy, TILE_SIZE, 0, 7); ctx.fill(); ctx.stroke();
-                    }
-                    if(e.type === 'mine') {
-                        ctx.fillStyle = '#f00';
-                        ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 7); ctx.fill();
-                    }
-                });
-
-                this.ghosts.forEach(g => g.draw(ctx, ox, oy));
-                
-                const px = ox + this.player.x*TILE_SIZE + TILE_SIZE/2;
-                const py = oy + this.player.y*TILE_SIZE + TILE_SIZE/2;
-                
-                if(this.player.invulnTimer > 0 && Math.floor(Date.now()/100)%2) ctx.globalAlpha = 0.5;
-                if(this.player.intangible > 0) ctx.globalAlpha = 0.3;
-                
-                ctx.save(); ctx.translate(px, py);
-                let rot = 0;
-                if(this.player.dirX<0) rot = Math.PI;
-                if(this.player.dirY>0) rot = Math.PI/2;
-                if(this.player.dirY<0) rot = -Math.PI/2;
-                ctx.rotate(rot);
-                
-                ctx.fillStyle = this.player.colorOverride || (this.player.stats.glitch ? `hsl(${Date.now()%360}, 100%, 50%)` : this.colors.pellet);
-                if(this.player.powerMode) { ctx.shadowBlur = 15; ctx.shadowColor = this.colors.pellet; }
-                
-                const mouth = Math.abs(Math.sin(Date.now()/100))*0.5;
-                const size = TILE_SIZE/2 * this.player.stats.size;
-                ctx.beginPath(); ctx.arc(0, 0, size - 1, mouth, Math.PI*2-mouth); ctx.lineTo(0,0); ctx.fill();
-                ctx.shadowBlur = 0;
-                
-                if(this.player.shieldActive || this.player.stats.guardian) {
-                    ctx.strokeStyle = this.colors.ui; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(0,0, size + 2, 0, 7); ctx.stroke();
-                }
-                ctx.restore(); ctx.globalAlpha = 1;
-                
-                this.particles.forEach(p => {
-                    ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
-                    ctx.fillRect(ox+p.x, oy+p.y, 4, 4);
-                });
-                ctx.globalAlpha = 1;
-            }
-
-            levelComplete() {
-                audio.sfxWin();
-                if(this.player.stats.greed) this.score += Math.floor(this.player.powerTimer * 100);
-                if(this.player.stats.interest) this.score += Math.floor(this.score * 0.1);
-                if(this.player.stats.pacifist && this.killsThisFloor === 0) this.score *= 3;
-                if(this.player.stats.consistency && !this.damageThisFloor) this.score = Math.floor(this.score * 1.2);
-                
-                this.floor++;
-                this.state = 'upgrade';
-                this.showScreen('upgradeContent');
-                
-                const keys = Object.keys(CARDS);
-                const choices = [];
-                while(choices.length < 3) {
-                    const k = keys[Math.floor(this.rng()*keys.length)];
-                    if(!choices.includes(k)) {
-                        if(CARDS[k].type === 'active' && this.player.activeItem) continue;
-                        choices.push(k);
-                    }
-                }
-                document.getElementById('upgradeContent').innerHTML = `
-                    <div class="title">floor ${this.floor-1} cleared</div>
-                    <div class="upgrade-grid">
-                        ${choices.map(k => `
-                            <div class="upgrade-card" onclick="game.pickUpgrade('${k}')">
-                                <div class="upgrade-header">
-                                    <span class="upgrade-name">${CARDS[k].name}</span>
-                                    <span class="upgrade-type type-${CARDS[k].type}">${CARDS[k].type}</span>
-                                </div>
-                                <div class="upgrade-desc">${CARDS[k].desc}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            pickUpgrade(key) {
-                const card = CARDS[key];
-                if(card.type === 'active') {
-                    this.player.activeItem = key;
-                    this.player.activeCooldown = 0;
-                } else {
-                    card.apply(this.player);
-                    if(this.player.stats.collector) this.player.stats.baseMult += 1;
-                }
-                this.player.cards.push(key);
-                this.generateFloor();
-                this.state = 'playing';
-                document.getElementById('overlay').classList.add('hidden');
-            }
-
-            gameOver() {
-                this.state = 'gameover';
-                if(this.score > this.highScore) {
-                    this.highScore = this.score;
-                    localStorage.setItem('mazeRunnerHighScore', this.highScore);
-                    document.getElementById('menuHighScore').innerText = this.highScore;
-                }
-                
-                const timeMs = Date.now() - this.startTime;
-                const mins = Math.floor(timeMs / 60000);
-                const secs = Math.floor((timeMs % 60000) / 1000);
-                const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-                
-                document.getElementById('finalScore').innerText = this.score;
-                document.getElementById('finalFloor').innerText = this.floor;
-                document.getElementById('finalTime').innerText = timeStr;
-                document.getElementById('finalHits').innerText = this.hitsTaken;
-                
-                this.showScreen('gameOverContent');
-            }
-
-            shareResults() {
-                const text = `kukuru chase\nscore: ${this.score}\nfloor: ${this.floor}\ntime: ${document.getElementById('finalTime').innerText}\nseed: ${this.seed}`;
-                navigator.clipboard.writeText(text).then(() => alert('results copied to clipboard!'));
-            }
-
-            downloadResults() {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = 600;
-                tempCanvas.height = 400;
-                const tCtx = tempCanvas.getContext('2d');
-                
-                tCtx.fillStyle = this.colors.bg;
-                tCtx.fillRect(0, 0, 600, 400);
-                tCtx.strokeStyle = this.colors.ui;
-                tCtx.lineWidth = 5;
-                tCtx.strokeRect(0, 0, 600, 400);
-                
-                tCtx.font = '40px "VT323", monospace';
-                tCtx.fillStyle = this.colors.accent;
-                tCtx.textAlign = 'center';
-                tCtx.fillText('kukuru chase results', 300, 60);
-                
-                tCtx.font = '30px "VT323", monospace';
-                tCtx.fillStyle = this.colors.ui;
-                tCtx.fillText(`score: ${this.score}`, 300, 120);
-                tCtx.fillStyle = this.colors.pellet;
-                tCtx.fillText(`floor: ${this.floor}`, 300, 170);
-                tCtx.fillStyle = this.colors.accent;
-                tCtx.fillText(`time: ${document.getElementById('finalTime').innerText}`, 300, 220);
-                tCtx.fillStyle = this.colors.text;
-                tCtx.fillText(`hits taken: ${this.hitsTaken}`, 300, 270);
-                tCtx.fillStyle = '#888';
-                tCtx.font = '20px "VT323", monospace';
-                tCtx.fillText(`seed: ${this.seed}`, 300, 350);
-                
-                const link = document.createElement('a');
-                link.download = `kukuru-chase-${Date.now()}.jpg`;
-                link.href = tempCanvas.toDataURL('image/jpeg');
-                link.click();
-            }
-
-            loop() {
-                const now = Date.now();
-                const dt = Math.min((now - this.lastTime) / 1000, 0.1);
-                this.lastTime = now;
-                this.update(dt);
-                this.draw();
-                requestAnimationFrame(() => this.loop());
-            }
-        }
-        const game = new Game();
-    </script>
+<div id="ui">
+<div class="stat-group">
+<div class="stat-block"><span class="stat-label">floor</span><span id="floor">1</span></div>
+<div class="stat-block"><span class="stat-label">score</span><span id="score">0</span></div>
+</div>
+<div class="stat-group">
+<div class="stat-block" style="display:flex; flex-direction:column; align-items:flex-end;">
+<div style="font-size:16px; color:#aaa;">hp <span id="hp">5</span>/<span id="maxHp">5</span></div>
+<div class="health-bar"><div class="health-fill" id="healthFill" style="width: 100%;"></div></div>
+<div class="dash-bar"><div class="dash-fill" id="dashFill"></div></div>
+</div>
+<div id="muteBtn" onclick="audio.toggle()">🔊</div>
+</div>
+</div>
+<div id="activeItemDisplay">
+<div style="font-size:14px; color:#aaa;">active</div>
+<div style="display:flex; align-items:center; justify-content:flex-end;">
+<span id="activeName" style="color:var(--accent-color);">none</span>
+<div class="active-icon" id="activeIcon">-</div>
+</div>
+</div>
+<div id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+<div id="mobileControls">
+<div class="dpad">
+<div class="dpad-button dpad-up" data-dir="up">▲</div>
+<div class="dpad-button dpad-down" data-dir="down">▼</div>
+<div class="dpad-button dpad-left" data-dir="left">◀</div>
+<div class="dpad-button dpad-right" data-dir="right">▶</div>
+</div>
+<div class="action-group">
+<div class="action-btn" id="btnDash">
+<div class="action-fill" id="fillDash"></div>
+<div class="action-label">DASH</div>
+</div>
+<div class="action-btn" id="btnUlt" style="border-color:#ff00ff; color:#ff00ff; opacity: 0.5;">
+<div class="action-fill" id="fillUlt" style="background:rgba(255,0,255,0.3);"></div>
+<div class="action-label">ULT</div>
+</div>
+</div>
+</div>
+<div id="overlay">
+<div class="title">kukuru chase</div>
+<div id="menuContent" class="screen-content active">
+<div style="margin-bottom: 10px; color: #888;">high score: <span id="menuHighScore">0</span></div>
+<div class="seed-container">
+<div class="seed-row">
+<input type="checkbox" id="randomSeed" checked onchange="game.toggleSeedInput()">
+<label for="randomSeed">randomize seed</label>
+</div>
+<input type="text" id="seedInput" placeholder="enter seed" disabled>
+</div>
+<button class="button" onclick="game.startGame()">start run</button>
+<button class="button" onclick="game.openThemes()">themes</button>
+<div style="margin-top:10px; font-size:16px; color:#888;">space=dash, e=ultimate</div>
+</div>
+<div id="themeContent" class="screen-content">
+<div style="font-size: 24px; margin-bottom: 10px;">select theme</div>
+<div style="font-size: 16px; color: #888; margin-bottom: 20px;">unlock new themes every 10k score</div>
+<div id="themeGrid" class="theme-grid"></div>
+<button class="button" onclick="game.showScreen('menuContent')" style="margin-top: 20px;">back</button>
+</div>
+<div id="gameOverContent" class="screen-content" style="text-align:center;">
+<div style="font-size: 40px; color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000;">game over</div>
+<div style="font-size: 26px; color: var(--ui-color); margin-bottom: 5px;">score: <span id="finalScore">0</span></div>
+<div style="font-size: 26px; color: var(--accent-color); margin-bottom: 5px;">floor: <span id="finalFloor">1</span></div>
+<div style="font-size: 26px; color: #fff; margin-bottom: 5px;">time: <span id="finalTime">00:00</span></div>
+<div style="font-size: 26px; color: #888; margin-bottom: 20px;">hits taken: <span id="finalHits">0</span></div>
+<div class="results-row">
+<button class="button" onclick="game.shareResults()">share</button>
+<button class="button" onclick="game.downloadResults()">download jpg</button>
+</div>
+<button class="button" onclick="game.showScreen('menuContent')" style="margin-top: 20px; border-color: #888; color: #888;">main menu</button>
+</div>
+<div id="upgradeContent" class="screen-content"></div>
+</div>
+</div>
+<script>
+const THEMES = [
+{ id: 'winter', name: 'winter', score: 0, colors: { bg: '#050a14', wall: '#4488aa', ui: '#aaddff', text: '#ffffff', accent: '#00ffff', pellet: '#ffffff', power: '#00ffff', ghosts: ['#ff0000', '#ffb8ff', '#00ffff', '#ffb852'] } },
+{ id: 'classic', name: 'classic', score: 10000, colors: { bg: '#000000', wall: '#1919a6', ui: '#ffff00', text: '#ffffff', accent: '#ff0000', pellet: '#ffb8ae', power: '#ffb8ae', ghosts: ['#ff0000', '#ffb8ff', '#00ffff', '#ffb852'] } },
+{ id: 'gameboy', name: 'gameboy', score: 20000, colors: { bg: '#0f380f', wall: '#306230', ui: '#8bac0f', text: '#9bbc0f', accent: '#306230', pellet: '#8bac0f', power: '#9bbc0f', ghosts: ['#306230', '#306230', '#306230', '#306230'] } },
+{ id: 'matrix', name: 'matrix', score: 30000, colors: { bg: '#000000', wall: '#003300', ui: '#00ff00', text: '#00ff00', accent: '#008800', pellet: '#00ff00', power: '#ffffff', ghosts: ['#00ff00', '#00ff00', '#00ff00', '#00ff00'] } },
+{ id: 'vapor', name: 'vapor', score: 40000, colors: { bg: '#2b0f54', wall: '#ff00ff', ui: '#00ffff', text: '#ff71ce', accent: '#01cdfe', pellet: '#fff', power: '#00ffff', ghosts: ['#ff71ce', '#01cdfe', '#05ffa1', '#b967ff'] } },
+{ id: 'hotline', name: 'hotline', score: 50000, colors: { bg: '#000000', wall: '#ff0055', ui: '#00ffff', text: '#ffffff', accent: '#ff0055', pellet: '#ffff00', power: '#00ffff', ghosts: ['#ff0055', '#00ffff', '#ff0055', '#00ffff'] } }
+];
+class AudioController {
+constructor() {
+this.ctx = null;
+this.masterGain = null;
+this.enabled = true;
+this.musicTimer = null;
+this.nextNoteTime = 0;
+this.beatCount = 0;
+}
+init() {
+if (this.ctx) return;
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+this.ctx = new AudioContext();
+this.masterGain = this.ctx.createGain();
+this.masterGain.gain.value = 0.25;
+this.masterGain.connect(this.ctx.destination);
+}
+toggle() {
+this.enabled = !this.enabled;
+document.getElementById('muteBtn').innerText = this.enabled ? '🔊' : '🔇';
+if(this.ctx) {
+if(this.enabled) {
+if(this.ctx.state === 'suspended') this.ctx.resume();
+this.startMusic();
+}
+else {
+this.ctx.suspend();
+clearTimeout(this.musicTimer);
+}
+}
+}
+playTone(freq, type, duration, vol=0.5, slideTo=null) {
+if (!this.enabled || !this.ctx || this.ctx.state === 'suspended') return;
+const osc = this.ctx.createOscillator();
+const gain = this.ctx.createGain();
+osc.type = type;
+osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+if(slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
+gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+osc.connect(gain); gain.connect(this.masterGain);
+osc.start(); osc.stop(this.ctx.currentTime + duration);
+}
+playNoise(duration, vol=0.2) {
+if (!this.enabled || !this.ctx || this.ctx.state === 'suspended') return;
+const bufferSize = this.ctx.sampleRate * duration;
+const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+const data = buffer.getChannelData(0);
+for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+const noise = this.ctx.createBufferSource();
+noise.buffer = buffer;
+const gain = this.ctx.createGain();
+gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+noise.connect(gain); gain.connect(this.masterGain);
+noise.start();
+}
+playKick() { this.playTone(150, 'sine', 0.1, 0.8, 0.01); this.playTone(50, 'square', 0.05, 0.2, 0.01); }
+playSnare() { this.playNoise(0.15, 0.3); this.playTone(200, 'triangle', 0.05, 0.2); }
+playHat() { this.playNoise(0.05, 0.1); }
+playBass(freq) { this.playTone(freq, 'triangle', 0.2, 0.3); this.playTone(freq/2, 'sine', 0.2, 0.4); }
+sfxEat() { this.playTone(400, 'triangle', 0.05, 0.2); }
+sfxPower() { this.playTone(600, 'sine', 0.4, 0.3, 1200); }
+sfxGhostDeath() { this.playTone(800, 'square', 0.1, 0.4, 100); setTimeout(()=>this.playTone(400, 'square', 0.1, 0.4, 50), 100); }
+sfxDamage() { this.playTone(150, 'sawtooth', 0.3, 0.5, 50); }
+sfxWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'square', 0.2, 0.3), i*100)); }
+sfxDie() { this.playTone(300, 'sawtooth', 1.0, 0.5, 50); }
+sfxDash() { this.playNoise(0.1); this.playTone(200, 'sawtooth', 0.1, 0.3, 600); }
+sfxUlt() { this.playTone(880, 'square', 0.5, 0.4, 220); }
+startMusic() {
+if(!this.enabled || !this.ctx) return;
+if(this.ctx.state === 'suspended') this.ctx.resume();
+this.nextNoteTime = this.ctx.currentTime;
+this.beatCount = 0;
+clearTimeout(this.musicTimer);
+this.scheduleMusic();
+}
+scheduleMusic() {
+if(!this.enabled) return;
+const tempo = 0.13;
+const lookahead = 0.1;
+while (this.nextNoteTime < this.ctx.currentTime + lookahead) {
+const step = this.beatCount % 16;
+if (step % 4 === 0) this.playKick();
+if (step % 8 === 4) this.playSnare();
+if (step % 2 === 0) this.playHat();
+const bassNotes = [55, 55, 55, 55, 49, 49, 52, 52];
+if (step % 2 === 0) {
+const note = bassNotes[Math.floor(step/2) % 8];
+this.playBass(note);
+}
+this.nextNoteTime += tempo;
+this.beatCount++;
+}
+this.musicTimer = setTimeout(() => this.scheduleMusic(), 25);
+}
+}
+const audio = new AudioController();
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) || window.innerWidth <= 768;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+const container = document.getElementById('gameContainer');
+canvas.width = container.clientWidth;
+canvas.height = container.clientHeight;
+}
+window.addEventListener('load', resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
+if (isMobile) document.getElementById('mobileControls').classList.add('show');
+const TILE_SIZE = 18;
+const MAZE_WIDTH = 20;
+const MAZE_HEIGHT = 20;
+function xmur3(str) {
+for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+h = h << 13 | h >>> 19;
+}
+return function() {
+h = Math.imul(h ^ h >>> 16, 2246822507);
+h = Math.imul(h ^ h >>> 13, 3266489909);
+return (h ^= h >>> 16) >>> 0;
+}
+}
+function mulberry32(a) {
+return function() {
+var t = a += 0x6D2B79F5;
+t = Math.imul(t ^ t >>> 15, t | 1);
+t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+}
+const CARDS = {
+phase: { name: "phase shift", type: "active", cd: 25, desc: "walk through walls for 3s", onUse: (g) => { g.player.intangible = 3; g.player.colorOverride = '#ffffff'; } },
+nuke: { name: "the nuke", type: "active", cd: 90, desc: "kill all ghosts (no score)", onUse: (g) => { g.ghosts.forEach(gh => { gh.dead = true; gh.respawnTimer = 8; g.particles.push({x:gh.x*TILE_SIZE, y:gh.y*TILE_SIZE, vx:0, vy:0, life:1, color:'#fff'}); }); g.shake = 2; } },
+timelock: { name: "time lock", type: "active", cd: 45, desc: "freeze ghosts for 5s", onUse: (g) => { g.timeStop = 5; } },
+blink: { name: "blink dagger", type: "active", cd: 12, desc: "teleport 4 tiles", onUse: (g) => { const dx = g.player.dirX * 4, dy = g.player.dirY * 4; let tx = g.player.x + dx, ty = g.player.y + dy; if(tx>0 && tx<MAZE_WIDTH-1 && ty>0 && ty<MAZE_HEIGHT-1 && g.maze[Math.round(ty)][Math.round(tx)] !== 1) { g.player.x = tx; g.player.y = ty; g.particles.push({x:tx*TILE_SIZE, y:ty*TILE_SIZE, vx:0, vy:0, life:0.5, color:'#0ff'}); } } },
+decoy: { name: "decoy holo", type: "active", cd: 30, desc: "spawn clone for 8s", onUse: (g) => { g.entities.push({type:'decoy', x:g.player.x, y:g.player.y, life:8}); } },
+repulsor: { name: "repulsor", type: "active", cd: 20, desc: "push ghosts away", onUse: (g) => { g.ghosts.forEach(gh => { const dx = gh.x - g.player.x, dy = gh.y - g.player.y; const dist = Math.hypot(dx, dy); if(dist < 8) { const force = 5/(dist+0.1); gh.x += dx*force; gh.y += dy*force; gh.stun = 2; } }); } },
+berserk: { name: "berserk", type: "active", cd: 60, desc: "power mode for 4s", onUse: (g) => { g.player.powerMode = true; g.player.powerTimer = 4; g.ghosts.forEach(gh => gh.scaredTimer = 4); } },
+blackhole: { name: "black hole", type: "active", cd: 50, desc: "suck ghosts in", onUse: (g) => { g.entities.push({type:'blackhole', x:g.player.x, y:g.player.y, life:4}); } },
+mine: { name: "mine layer", type: "active", cd: 20, desc: "drop explosive mine", onUse: (g) => { g.entities.push({type:'mine', x:g.player.x, y:g.player.y, life:999}); } },
+swap: { name: "swap strike", type: "active", cd: 25, desc: "swap with nearest ghost", onUse: (g) => { let n = null, d = 999; g.ghosts.forEach(gh => { const dist = Math.hypot(gh.x - g.player.x, gh.y - g.player.y); if(dist < d) { d = dist; n = gh; } }); if(n && g.maze[Math.round(n.y)][Math.round(n.x)] !== 1) { const tx = g.player.x, ty = g.player.y; g.player.x = n.x; g.player.y = n.y; n.x = tx; n.y = ty; n.stun = 2; } } },
+overclock: { name: "overclock", type: "active", cd: 40, desc: "2x speed for 5s", onUse: (g) => { g.player.speedBuff = 5; } },
+turbo: { name: "turbo engine", type: "passive", desc: "+15% speed", apply: (p) => p.stats.speed *= 1.15 },
+spiked: { name: "spiked tires", type: "passive", desc: "ignore ice/mud", apply: (p) => p.stats.ignoreTerrain = true },
+afterburner: { name: "afterburner", type: "passive", desc: "accel over time", apply: (p) => p.stats.accel = true },
+hover: { name: "hoverboard", type: "passive", desc: "immune to hazards", apply: (p) => p.stats.hover = true },
+strafer: { name: "strafer", type: "passive", desc: "faster horizontal move", apply: (p) => p.stats.strafe = true },
+brakes: { name: "brakes", type: "passive", desc: "instant stop", apply: (p) => p.stats.friction = 0.5 },
+teledash: { name: "tele-dash", type: "passive", desc: "2x dash distance", apply: (p) => p.stats.dashDist *= 2 },
+thorns: { name: "thorns", type: "passive", desc: "damage touching ghosts", apply: (p) => p.stats.thorns = true },
+shield: { name: "energy shield", type: "passive", desc: "block 1 hit/floor", apply: (p) => p.stats.shield = true },
+vamp: { name: "vampirism", type: "passive", desc: "kill ghost = +0.5hp", apply: (p) => p.stats.vamp = true },
+adren: { name: "adrenaline", type: "passive", desc: "low hp = fast", apply: (p) => p.stats.adrenaline = true },
+guardian: { name: "guardian", type: "passive", desc: "orb blocks ghosts", apply: (p) => p.stats.guardian = true },
+shock: { name: "shock touch", type: "passive", desc: "stun on touch", apply: (p) => p.stats.shock = true },
+phoenix: { name: "phoenix", type: "passive", desc: "revive 1/run", apply: (p) => p.stats.revive = true },
+iron: { name: "iron skin", type: "passive", desc: "+2 max hp", apply: (p) => { p.maxHealth += 2; p.health += 2; } },
+glass: { name: "glass cannon", type: "passive", desc: "1hp, x10 score", apply: (p) => { p.maxHealth = 1; p.health = 1; p.stats.scoreMult *= 10; } },
+avenger: { name: "avenger", type: "passive", desc: "dmg = nuke nearby", apply: (p) => p.stats.avenger = true },
+blue: { name: "blue chip", type: "passive", desc: "+50 chips/pellet", apply: (p) => p.stats.baseChips += 50 },
+red: { name: "red chip", type: "passive", desc: "+2 mult", apply: (p) => p.stats.baseMult += 2 },
+gold: { name: "gold chip", type: "passive", desc: "x1.5 mult", apply: (p) => p.stats.finalMult *= 1.5 },
+combo: { name: "combo master", type: "passive", desc: "+0.1 mult/pellet", apply: (p) => p.stats.combo = true },
+hunter: { name: "ghost hunter", type: "passive", desc: "x2 mult for kills", apply: (p) => p.stats.hunter = true },
+pacifist: { name: "pacifist", type: "passive", desc: "x3 mult if no kills", apply: (p) => p.stats.pacifist = true },
+speeddemon: { name: "speed demon", type: "passive", desc: "score x velocity", apply: (p) => p.stats.speedScore = true },
+greed: { name: "greed", type: "passive", desc: "time = score", apply: (p) => p.stats.greed = true },
+collector: { name: "collector", type: "passive", desc: "+1 mult/card", apply: (p) => p.stats.collector = true },
+risk: { name: "risk taker", type: "passive", desc: "x4 mult, fast ghosts", apply: (p) => { p.stats.finalMult *= 4; p.stats.ghostSpeed *= 1.2; } },
+interest: { name: "interest", type: "passive", desc: "+10% score/floor", apply: (p) => p.stats.interest = true },
+jackpot: { name: "jackpot", type: "passive", desc: "1% chance x100 mult", apply: (p) => p.stats.jackpot = true },
+blood: { name: "blood money", type: "passive", desc: "-1hp, x5 mult", apply: (p) => { p.health -= 1; p.stats.finalMult *= 5; } },
+consist: { name: "consistency", type: "passive", desc: "x1.2 mult/clean floor", apply: (p) => p.stats.consistency = true },
+magnet: { name: "magnet", type: "passive", desc: "attract pellets", apply: (p) => p.stats.magnet = true },
+battery: { name: "battery", type: "passive", desc: "-25% cooldowns", apply: (p) => p.stats.cdr = 0.75 },
+midas: { name: "midas touch", type: "passive", desc: "power pellets = gold", apply: (p) => p.stats.midas = true },
+scavenger: { name: "scavenger", type: "passive", desc: "ghosts drop hp", apply: (p) => p.stats.scavenger = true },
+tiny: { name: "tiny mode", type: "passive", desc: "small size", apply: (p) => p.stats.size = 0.7 },
+big: { name: "big mode", type: "passive", desc: "big size, crush walls", apply: (p) => { p.stats.size = 1.3; p.stats.crush = true; p.stats.speed *= 0.8; } },
+glitch: { name: "glitch", type: "passive", desc: "random colors, x1.5 score", apply: (p) => { p.stats.glitch = true; p.stats.scoreMult *= 1.5; } }
+};
+class PathFinder {
+static find(sx, sy, ex, ey, maze) {
+if(ex<0 || ex>=MAZE_WIDTH || ey<0 || ey>=MAZE_HEIGHT || maze[ey][ex]===1) return null;
+const start = {x:sx, y:sy, g:0, h:0, f:0, p:null};
+const open = [start];
+const closed = new Uint8Array(MAZE_WIDTH*MAZE_HEIGHT);
+let iters = 0;
+while(open.length > 0 && iters++ < 250) {
+let low = 0;
+for(let i=1; i<open.length; i++) if(open[i].f < open[low].f) low = i;
+let cur = open[low];
+if(cur.x === ex && cur.y === ey) {
+const path = [];
+while(cur.p) { path.push({x:cur.x, y:cur.y}); cur = cur.p; }
+return path.reverse();
+}
+open.splice(low, 1);
+closed[cur.y*MAZE_WIDTH + cur.x] = 1;
+const dirs = [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}];
+for(let d of dirs) {
+const nx = cur.x + d.x, ny = cur.y + d.y;
+if(nx>=0 && nx<MAZE_WIDTH && ny>=0 && ny<MAZE_HEIGHT && maze[ny][nx]!==1 && !closed[ny*MAZE_WIDTH+nx]) {
+const g = cur.g + 1;
+let n = open.find(o => o.x===nx && o.y===ny);
+if(!n) {
+n = {x:nx, y:ny, g:g, h:Math.abs(nx-ex)+Math.abs(ny-ey), f:0, p:cur};
+n.f = n.g + n.h; open.push(n);
+} else if(g < n.g) { n.g = g; n.f = n.g + n.h; n.p = cur; }
+}
+}
+}
+return null;
+}
+}
+class Ghost {
+constructor(x, y, type, floor, colors) {
+this.x = x; this.y = y;
+this.startX = x; this.startY = y;
+this.type = type % 4;
+this.colors = colors;
+const configs = [{ speed: 1.05 }, { speed: 1.0 }, { speed: 0.95 }, { speed: 0.9 }];
+this.config = configs[this.type];
+this.baseSpeed = this.config.speed * (1 + floor * 0.02);
+this.dir = {x:0, y:0};
+this.nextTile = {x: Math.round(x), y: Math.round(y)};
+this.mode = 'scatter';
+this.scaredTimer = 0;
+this.dead = false;
+this.respawnTimer = 0;
+this.stun = 0;
+}
+update(dt, player, maze, gameTime, pelletsLeft, totalPellets, rng, entities) {
+if (this.dead) {
+this.respawnTimer -= dt;
+if (this.respawnTimer <= 0) {
+this.dead = false;
+this.x = this.startX; this.y = this.startY;
+this.nextTile = {x: Math.round(this.x), y: Math.round(this.y)};
+}
+return;
+}
+if (this.stun > 0) { this.stun -= dt; return; }
+if (Math.hypot(this.x - this.nextTile.x, this.y - this.nextTile.y) > 1.5) {
+this.nextTile.x = Math.round(this.x);
+this.nextTile.y = Math.round(this.y);
+}
+if (this.scaredTimer > 0) { this.scaredTimer -= dt; this.mode = 'frightened'; }
+else { this.mode = (gameTime % 12 < 5) ? 'scatter' : 'chase'; }
+let speed = this.baseSpeed * 4.0 * player.stats.ghostSpeed;
+if (this.mode === 'frightened') speed *= 0.6;
+else if (this.type === 0 && this.mode === 'chase') {
+const ratio = pelletsLeft / totalPellets;
+if (ratio < 0.1) speed *= 1.2; else if (ratio < 0.3) speed *= 1.1;
+}
+const tileType = maze[Math.round(this.y)][Math.round(this.x)];
+if(tileType === 2) speed *= 1.2;
+if(tileType === 3) speed *= 0.8;
+speed = Math.min(speed, 7.0);
+const moveDist = speed * dt;
+const dx = this.nextTile.x - this.x;
+const dy = this.nextTile.y - this.y;
+const distToNext = Math.hypot(dx, dy);
+if (distToNext > moveDist) {
+this.x += (dx / distToNext) * moveDist;
+this.y += (dy / distToNext) * moveDist;
+} else {
+this.x = this.nextTile.x; this.y = this.nextTile.y;
+const remaining = moveDist - distToNext;
+this.decideNext(player, maze, rng, entities);
+if (this.dir.x !== 0 || this.dir.y !== 0) {
+this.x += this.dir.x * remaining;
+this.y += this.dir.y * remaining;
+this.nextTile.x = Math.round(this.x) + this.dir.x;
+this.nextTile.y = Math.round(this.y) + this.dir.y;
+}
+}
+}
+decideNext(player, maze, rng, entities) {
+const cx = Math.round(this.x);
+const cy = Math.round(this.y);
+let tx = player.x, ty = player.y;
+const decoy = entities.find(e => e.type === 'decoy');
+if(decoy) { tx = decoy.x; ty = decoy.y; }
+if (this.mode === 'scatter' && !decoy) {
+if(this.type===0) { tx=MAZE_WIDTH-2; ty=1; }
+if(this.type===1) { tx=1; ty=1; }
+if(this.type===2) { tx=MAZE_WIDTH-2; ty=MAZE_HEIGHT-2; }
+if(this.type===3) { tx=1; ty=MAZE_HEIGHT-2; }
+} else if (this.mode === 'frightened') {
+tx = Math.floor(rng()*MAZE_WIDTH);
+ty = Math.floor(rng()*MAZE_HEIGHT);
+} else if (!decoy) {
+if (this.type === 1) { tx += player.dirX * 4; ty += player.dirY * 4; }
+else if (this.type === 3) { if (Math.hypot(cx-tx, cy-ty) < 8) { tx=1; ty=MAZE_HEIGHT-2; } }
+}
+const dirs = [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}];
+let valid = dirs.filter(d => {
+if (cy+d.y < 0 || cy+d.y >= MAZE_HEIGHT || cx+d.x < 0 || cx+d.x >= MAZE_WIDTH) return false;
+if (maze[cy+d.y][cx+d.x] === 1) return false;
+if (d.x === -this.dir.x && d.y === -this.dir.y) return false;
+return true;
+});
+if (valid.length === 0) valid = dirs.filter(d => {
+if (cy+d.y < 0 || cy+d.y >= MAZE_HEIGHT || cx+d.x < 0 || cx+d.x >= MAZE_WIDTH) return false;
+return maze[cy+d.y][cx+d.x] !== 1;
+});
+let bestDir = {x:0, y:0};
+if (this.mode === 'frightened') {
+bestDir = valid[Math.floor(rng() * valid.length)];
+} else {
+if (this.type === 0 && rng() < 0.3) {
+const path = PathFinder.find(cx, cy, Math.round(tx), Math.round(ty), maze);
+if (path && path.length > 0) bestDir = {x: path[0].x - cx, y: path[0].y - cy};
+else {
+let minDist = Infinity;
+for (let d of valid) {
+const dist = (cx+d.x-tx)**2 + (cy+d.y-ty)**2;
+if (dist < minDist) { minDist = dist; bestDir = d; }
+}
+}
+} else {
+let minDist = Infinity;
+for (let d of valid) {
+const dist = (cx+d.x-tx)**2 + (cy+d.y-ty)**2;
+if (dist < minDist) { minDist = dist; bestDir = d; }
+}
+}
+}
+this.dir = bestDir || {x:0, y:0};
+this.nextTile = {x: cx + this.dir.x, y: cy + this.dir.y};
+}
+draw(ctx, ox, oy) {
+if (this.dead) return;
+const sx = ox + this.x * TILE_SIZE;
+const sy = oy + this.y * TILE_SIZE;
+ctx.fillStyle = (this.mode === 'frightened') ? (Math.floor(Date.now()/200)%2 ? '#fff' : '#22f') : this.colors[this.type];
+ctx.beginPath();
+ctx.arc(sx + TILE_SIZE/2, sy + TILE_SIZE/2 - 2, TILE_SIZE/2 - 1, Math.PI, 0);
+ctx.lineTo(sx + TILE_SIZE - 1, sy + TILE_SIZE - 1);
+ctx.lineTo(sx + 1, sy + TILE_SIZE - 1);
+ctx.fill();
+if (this.mode !== 'frightened') {
+ctx.fillStyle = '#fff';
+const ex = this.dir.x * 2; const ey = this.dir.y * 2;
+ctx.beginPath(); ctx.arc(sx+7+ex, sy+8+ey, 3, 0, Math.PI*2); ctx.fill();
+ctx.beginPath(); ctx.arc(sx+13+ex, sy+8+ey, 3, 0, Math.PI*2); ctx.fill();
+ctx.fillStyle = '#000';
+ctx.beginPath(); ctx.arc(sx+7+ex+this.dir.x, sy+8+ey+this.dir.y, 1.5, 0, Math.PI*2); ctx.fill();
+ctx.beginPath(); ctx.arc(sx+13+ex+this.dir.x, sy+8+ey+this.dir.y, 1.5, 0, Math.PI*2); ctx.fill();
+}
+}
+}
+class Game {
+constructor() {
+this.state = 'menu';
+this.floor = 1; this.score = 0;
+this.camera = {x:0, y:0};
+this.gameTime = 0;
+this.startTime = 0;
+this.hitsTaken = 0;
+this.rng = Math.random;
+this.seed = "";
+this.shake = 0;
+this.highScore = parseInt(localStorage.getItem('mazeRunnerHighScore')) || 0;
+this.currentThemeIndex = parseInt(localStorage.getItem('mazeRunnerTheme')) || 0;
+this.colors = THEMES[this.currentThemeIndex].colors;
+this.player = {
+x: 10, y: 10, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0,
+health: 5, maxHealth: 5,
+powerMode: false, powerTimer: 0, invulnTimer: 0,
+dashCooldown: 0, activeItem: null, activeCooldown: 0,
+intangible: 0, speedBuff: 0, colorOverride: null,
+stats: {
+speed: 1.0, ignoreTerrain: false, accel: false, hover: false, strafe: false, friction: 0.9,
+dashDist: 1.0, thorns: false, shield: false, vamp: false, adrenaline: false, guardian: false,
+shock: false, revive: false, avenger: false, baseChips: 0, baseMult: 1, finalMult: 1,
+combo: false, hunter: false, pacifist: false, speedScore: false, greed: false, collector: false,
+ghostSpeed: 1.0, interest: false, jackpot: false, consistency: false, magnet: false, cdr: 1.0,
+midas: false, scavenger: false, size: 1.0, crush: false, glitch: false, scoreMult: 1.0
+},
+cards: []
+};
+this.keys = {};
+this.entities = [];
+this.timeStop = 0;
+this.animationFrameId = null;
+this.setupInput();
+this.applyTheme(this.currentThemeIndex);
+document.getElementById('menuHighScore').innerText = this.highScore;
+}
+applyTheme(index) {
+this.currentThemeIndex = index;
+this.colors = THEMES[index].colors;
+localStorage.setItem('mazeRunnerTheme', index);
+const root = document.documentElement;
+root.style.setProperty('--bg-color', this.colors.bg);
+root.style.setProperty('--ui-color', this.colors.ui);
+root.style.setProperty('--text-color', this.colors.text);
+root.style.setProperty('--accent-color', this.colors.accent);
+}
+openThemes() {
+const grid = document.getElementById('themeGrid');
+grid.innerHTML = '';
+THEMES.forEach((theme, index) => {
+const locked = this.highScore < theme.score;
+const btn = document.createElement('div');
+btn.className = `theme-btn ${index === this.currentThemeIndex ? 'active' : ''} ${locked ? 'locked' : ''}`;
+btn.innerHTML = `
+<div style="font-size:20px; color:${theme.colors.ui}">${theme.name}</div>
+<div style="font-size:14px; color:#888">${locked ? `locked (${theme.score/1000}k)` : 'unlocked'}</div>
+`;
+if(!locked) btn.onclick = () => {
+this.applyTheme(index);
+this.openThemes();
+};
+grid.appendChild(btn);
+});
+this.showScreen('themeContent');
+}
+toggleSeedInput() {
+const check = document.getElementById('randomSeed');
+const input = document.getElementById('seedInput');
+input.disabled = check.checked;
+if(check.checked) input.value = '';
+}
+showScreen(id) {
+document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.getElementById('overlay').classList.remove('hidden');
+}
+setupInput() {
+window.addEventListener('keydown', e => {
+this.keys[e.key] = true;
+if (this.state === 'playing') {
+if(e.key==='ArrowUp'||e.key==='w') { this.player.nextDirX=0; this.player.nextDirY=-1; }
+if(e.key==='ArrowDown'||e.key==='s') { this.player.nextDirX=0; this.player.nextDirY=1; }
+if(e.key==='ArrowLeft'||e.key==='a') { this.player.nextDirX=-1; this.player.nextDirY=0; }
+if(e.key==='ArrowRight'||e.key==='d') { this.player.nextDirX=1; this.player.nextDirY=0; }
+if(e.key===' ' && this.player.dashCooldown <= 0) this.dash();
+if(e.key==='e' || e.key==='E') this.useActive();
+}
+});
+window.addEventListener('keyup', e => this.keys[e.key] = false);
+window.addEventListener('blur', () => { this.keys = {}; });
+const handleDpad = (dir) => {
+if(dir==='up') { this.player.nextDirX=0; this.player.nextDirY=-1; }
+if(dir==='down') { this.player.nextDirX=0; this.player.nextDirY=1; }
+if(dir==='left') { this.player.nextDirX=-1; this.player.nextDirY=0; }
+if(dir==='right') { this.player.nextDirX=1; this.player.nextDirY=0; }
+};
+document.querySelectorAll('.dpad-button').forEach(b => {
+b.addEventListener('touchstart', (e) => {
+e.preventDefault();
+handleDpad(b.dataset.dir);
+}, {passive: false});
+b.addEventListener('mousedown', (e) => {
+e.preventDefault();
+handleDpad(b.dataset.dir);
+});
+});
+const dashBtn = document.getElementById('btnDash');
+const ultBtn = document.getElementById('btnUlt');
+const handleDash = (e) => {
+e.preventDefault();
+if(this.player.dashCooldown <= 0) this.dash();
+};
+dashBtn.addEventListener('touchstart', handleDash, {passive: false});
+dashBtn.addEventListener('mousedown', handleDash);
+const handleUlt = (e) => {
+e.preventDefault();
+this.useActive();
+};
+ultBtn.addEventListener('touchstart', handleUlt, {passive: false});
+ultBtn.addEventListener('mousedown', handleUlt);
+let tx=0, ty=0;
+canvas.addEventListener('touchstart', e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive: false});
+canvas.addEventListener('touchend', e => {
+const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+if(Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+if(Math.abs(dx) > Math.abs(dy)) { this.player.nextDirX = dx>0?1:-1; this.player.nextDirY = 0; }
+else { this.player.nextDirX = 0; this.player.nextDirY = dy>0?1:-1; }
+}
+}, {passive: false});
+}
+dash() {
+if(this.player.dirX === 0 && this.player.dirY === 0) return;
+this.player.dashCooldown = 3.0;
+this.player.invulnTimer = 0.5;
+audio.sfxDash();
+const dashDist = 3 * this.player.stats.dashDist;
+for(let i=0; i<dashDist; i++) {
+const nx = this.player.x + this.player.dirX;
+const ny = this.player.y + this.player.dirY;
+if(nx > 0 && nx < MAZE_WIDTH-1 && ny > 0 && ny < MAZE_HEIGHT-1 && (this.maze[Math.round(ny)][Math.round(nx)] !== 1 || this.player.intangible > 0)) {
+this.player.x = nx; this.player.y = ny;
+this.particles.push({x:nx*TILE_SIZE, y:ny*TILE_SIZE, vx:0, vy:0, life:0.5, color:'#ff00ff'});
+} else break;
+}
+}
+useActive() {
+if(this.player.activeItem && this.player.activeCooldown <= 0) {
+const card = CARDS[this.player.activeItem];
+if(card) {
+card.onUse(this);
+this.player.activeCooldown = card.cd * this.player.stats.cdr;
+audio.sfxUlt();
+}
+}
+}
+startGame() {
+audio.init();
+if(audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+audio.startMusic();
+const randomCheck = document.getElementById('randomSeed');
+const seedInput = document.getElementById('seedInput');
+if(randomCheck.checked) {
+this.seed = Math.random().toString(36).substring(7);
+} else {
+this.seed = seedInput.value || "maze";
+}
+const seedHash = xmur3(this.seed);
+this.rng = mulberry32(seedHash());
+this.floor = 1; this.score = 0; this.hitsTaken = 0;
+this.startTime = Date.now();
+this.player = {
+x: 10, y: 10, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0,
+health: 5, maxHealth: 5,
+powerMode: false, powerTimer: 0, invulnTimer: 0,
+dashCooldown: 0, activeItem: null, activeCooldown: 0,
+intangible: 0, speedBuff: 0, colorOverride: null,
+stats: {
+speed: 1.0, ignoreTerrain: false, accel: false, hover: false, strafe: false, friction: 0.9,
+dashDist: 1.0, thorns: false, shield: false, vamp: false, adrenaline: false, guardian: false,
+shock: false, revive: false, avenger: false, baseChips: 0, baseMult: 1, finalMult: 1,
+combo: false, hunter: false, pacifist: false, speedScore: false, greed: false, collector: false,
+ghostSpeed: 1.0, interest: false, jackpot: false, consistency: false, magnet: false, cdr: 1.0,
+midas: false, scavenger: false, size: 1.0, crush: false, glitch: false, scoreMult: 1.0
+},
+cards: []
+};
+this.generateFloor();
+this.state = 'playing';
+document.getElementById('overlay').classList.add('hidden');
+this.lastTime = Date.now();
+if(this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+this.loop();
+}
+generateFloor() {
+this.player.health = this.player.maxHealth;
+this.maze = [];
+for(let y=0; y<MAZE_HEIGHT; y++) { this.maze[y] = []; for(let x=0; x<MAZE_WIDTH; x++) this.maze[y][x] = 1; }
+const carve = (x, y) => {
+this.maze[y][x] = 0;
+const dirs = [[0,-2],[0,2],[-2,0],[2,0]].sort(()=>this.rng()-0.5);
+for(let [dx,dy] of dirs) {
+const nx=x+dx, ny=y+dy;
+if(nx>0 && nx<MAZE_WIDTH-1 && ny>0 && ny<MAZE_HEIGHT-1 && this.maze[ny][nx]===1) {
+this.maze[y+dy/2][x+dx/2] = 0;
+carve(nx, ny);
+}
+}
+};
+carve(1, 1);
+for(let i=0; i<20; i++) {
+const x = Math.floor(this.rng()*(MAZE_WIDTH-2))+1;
+const y = Math.floor(this.rng()*(MAZE_HEIGHT-2))+1;
+if(this.maze[y][x]===1) this.maze[y][x]=0;
+}
+const empties = [];
+for(let y=1; y<MAZE_HEIGHT-1; y++) for(let x=1; x<MAZE_WIDTH-1; x++) if(this.maze[y][x]===0) empties.push({x,y});
+const start = empties[Math.floor(this.rng()*empties.length)];
+this.player.x = start.x; this.player.y = start.y;
+this.player.dirX = 0; this.player.dirY = 0;
+if(this.player.stats.shield) this.player.shieldActive = true;
+const reachable = new Set();
+const stack = [{x: start.x, y: start.y}];
+reachable.add(`${start.x},${start.y}`);
+while(stack.length) {
+const {x, y} = stack.pop();
+const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+for(let [dx, dy] of dirs) {
+const nx = x+dx, ny = y+dy;
+if(nx>=0 && nx<MAZE_WIDTH && ny>=0 && ny<MAZE_HEIGHT && this.maze[ny][nx]!==1 && !reachable.has(`${nx},${ny}`)) {
+reachable.add(`${nx},${ny}`);
+stack.push({x:nx, y:ny});
+}
+}
+}
+const validEmpties = empties.filter(p => reachable.has(`${p.x},${p.y}`));
+validEmpties.forEach(p => {
+const r = this.rng();
+if(r < 0.15) this.maze[p.y][p.x] = 2;
+else if(r < 0.3) this.maze[p.y][p.x] = 3;
+});
+this.pellets = []; this.powerPellets = [];
+validEmpties.forEach(p => {
+if(Math.abs(p.x-start.x)>5 || Math.abs(p.y-start.y)>5) {
+if(this.rng() < 0.02) this.powerPellets.push(p);
+else this.pellets.push(p);
+}
+});
+this.totalPellets = this.pellets.length;
+this.ghosts = [];
+const count = 3 + Math.floor(this.floor/3);
+for(let i=0; i<count; i++) {
+let pos;
+do { pos = validEmpties[Math.floor(this.rng()*validEmpties.length)]; }
+while(Math.hypot(pos.x-start.x, pos.y-start.y) < 10);
+this.ghosts.push(new Ghost(pos.x, pos.y, i, this.floor, this.colors.ghosts));
+}
+this.particles = [];
+this.entities = [];
+this.combo = 0;
+this.killsThisFloor = 0;
+this.damageThisFloor = false;
+}
+update(dt) {
+if(this.state !== 'playing') return;
+this.gameTime += dt;
+if(this.shake > 0) this.shake -= dt * 5;
+if(this.player.dashCooldown > 0) this.player.dashCooldown -= dt;
+if(this.player.activeCooldown > 0) this.player.activeCooldown -= dt;
+if(this.player.intangible > 0) this.player.intangible -= dt;
+if(this.player.speedBuff > 0) this.player.speedBuff -= dt;
+if(this.timeStop > 0) this.timeStop -= dt;
+if(this.player.stats.vamp && this.player.health < this.player.maxHealth) this.player.health = Math.min(this.player.maxHealth, this.player.health);
+if(this.player.powerMode) {
+this.player.powerTimer -= dt;
+if(this.player.powerTimer <= 0) this.player.powerMode = false;
+}
+if(this.player.invulnTimer > 0) this.player.invulnTimer -= dt;
+const tileType = this.maze[Math.round(this.player.y)][Math.round(this.player.x)];
+let terrainMod = 1.0;
+if(!this.player.stats.ignoreTerrain) {
+if(tileType === 2) terrainMod = 1.2;
+if(tileType === 3) terrainMod = 0.8;
+}
+let baseSpeed = 4.5 * this.player.stats.speed * terrainMod;
+if(this.player.stats.adrenaline) baseSpeed *= (1 + (1 - this.player.health/this.player.maxHealth) * 0.5);
+if(this.player.speedBuff > 0) baseSpeed *= 2;
+if(this.player.stats.size > 1.1) baseSpeed *= 0.8;
+if(this.player.stats.strafe && this.player.dirY === 0) baseSpeed *= 1.3;
+const speed = baseSpeed * dt;
+if(this.player.nextDirX !== 0 || this.player.nextDirY !== 0) {
+const cx = Math.round(this.player.x);
+const cy = Math.round(this.player.y);
+const dist = Math.hypot(this.player.x - cx, this.player.y - cy);
+if(dist < 0.2 && (this.maze[cy+this.player.nextDirY][cx+this.player.nextDirX] !== 1 || this.player.intangible > 0 || this.player.stats.crush)) {
+this.player.x = cx; this.player.y = cy;
+this.player.dirX = this.player.nextDirX;
+this.player.dirY = this.player.nextDirY;
+this.player.nextDirX = 0; this.player.nextDirY = 0;
+}
+}
+const nx = this.player.x + this.player.dirX * speed;
+const ny = this.player.y + this.player.dirY * speed;
+const checkX = Math.round(nx + this.player.dirX * 0.4);
+const checkY = Math.round(ny + this.player.dirY * 0.4);
+if(this.maze[checkY][checkX] !== 1 || this.player.intangible > 0) {
+this.player.x = nx; this.player.y = ny;
+} else if(this.player.stats.crush && this.maze[checkY][checkX] === 1) {
+this.maze[checkY][checkX] = 0;
+this.shake = 0.2;
+this.player.x = nx; this.player.y = ny;
+} else {
+this.player.x = Math.round(this.player.x); this.player.y = Math.round(this.player.y);
+}
+if(this.player.stats.magnet) {
+this.pellets.forEach(p => {
+if(Math.hypot(p.x - this.player.x, p.y - this.player.y) < 3) {
+p.x += (this.player.x - p.x) * dt * 3;
+p.y += (this.player.y - p.y) * dt * 3;
+}
+});
+}
+for(let i=this.pellets.length-1; i>=0; i--) {
+if(Math.abs(this.pellets[i].x - this.player.x) < 0.5 && Math.abs(this.pellets[i].y - this.player.y) < 0.5) {
+this.pellets.splice(i, 1);
+let chips = 10 + this.player.stats.baseChips;
+let mult = 1 + this.player.stats.baseMult;
+if(this.player.stats.combo) mult += this.combo * 0.1;
+if(this.player.stats.jackpot && this.rng() < 0.01) mult *= 100;
+if(this.player.stats.speedScore) {
+const vel = Math.abs(this.player.dirX) + Math.abs(this.player.dirY);
+mult *= vel > 0 ? 2 : 1;
+}
+this.score += Math.floor(chips * mult * this.player.stats.finalMult * this.player.stats.scoreMult);
+this.combo++;
+audio.sfxEat();
+}
+}
+for(let i=this.powerPellets.length-1; i>=0; i--) {
+if(Math.abs(this.powerPellets[i].x - this.player.x) < 0.5 && Math.abs(this.powerPellets[i].y - this.player.y) < 0.5) {
+this.powerPellets.splice(i, 1);
+this.player.powerMode = true;
+this.player.powerTimer = 8;
+this.ghosts.forEach(g => g.scaredTimer = this.player.powerTimer);
+if(this.player.stats.midas) this.score += 500;
+audio.sfxPower();
+}
+}
+if(this.timeStop <= 0) {
+this.ghosts.forEach(g => {
+g.update(dt, this.player, this.maze, this.gameTime, this.pellets.length, this.totalPellets, this.rng, this.entities);
+if(g.dead) return;
+if(Math.hypot(g.x - this.player.x, g.y - this.player.y) < (this.player.stats.size * 0.6)) {
+if(this.player.powerMode && g.mode === 'frightened') {
+g.dead = true; g.respawnTimer = 5;
+this.killsThisFloor++;
+let mult = 1;
+if(this.player.stats.hunter) mult = 2;
+this.score += Math.floor(200 * mult * this.player.stats.finalMult);
+if(this.player.stats.vamp) this.player.health = Math.min(this.player.maxHealth, this.player.health + 0.5);
+if(this.player.stats.scavenger && this.rng() < 0.2) this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
+this.shake = 0.5;
+audio.sfxGhostDeath();
+for(let k=0; k<10; k++) this.particles.push({x:g.x*TILE_SIZE, y:g.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:g.color});
+} else if(!g.dead && this.player.invulnTimer <= 0) {
+if(this.player.stats.thorns) {
+g.stun = 2; g.dead = true; g.respawnTimer = 5; this.shake = 0.2;
+}
+if(this.player.stats.shock) {
+g.stun = 1;
+}
+if(this.player.shieldActive) {
+this.player.shieldActive = false;
+this.player.invulnTimer = 1.5;
+this.shake = 0.5;
+audio.sfxDamage();
+} else {
+this.player.health -= 1;
+this.hitsTaken++;
+this.damageThisFloor = true;
+this.player.invulnTimer = 1.5;
+this.shake = 1.0;
+this.combo = 0;
+if(this.player.stats.avenger) {
+this.ghosts.forEach(gh => {
+if(Math.hypot(gh.x - this.player.x, gh.y - this.player.y) < 5) {
+gh.dead = true; gh.respawnTimer = 5;
+}
+});
+}
+audio.sfxDamage();
+for(let k=0; k<15; k++) this.particles.push({x:this.player.x*TILE_SIZE, y:this.player.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:'#f00'});
+if(this.player.health <= 0) {
+if(this.player.stats.revive) {
+this.player.health = 1;
+this.player.stats.revive = false;
+this.player.invulnTimer = 3;
+this.shake = 2;
+this.ghosts.forEach(gh => gh.stun = 3);
+} else {
+audio.sfxDie(); this.gameOver();
+}
+}
+}
+}
+}
+});
+}
+if(this.pellets.length === 0) this.levelComplete();
+for(let i=this.particles.length-1; i>=0; i--) {
+let p = this.particles[i];
+p.x += p.vx; p.y += p.vy; p.life -= dt * 2;
+if(p.life <= 0) this.particles.splice(i, 1);
+}
+for(let i=this.entities.length-1; i>=0; i--) {
+let e = this.entities[i];
+e.life -= dt;
+if(e.type === 'blackhole') {
+this.ghosts.forEach(g => {
+const dx = e.x - g.x, dy = e.y - g.y;
+const d = Math.hypot(dx, dy);
+if(d < 5 && d > 0.1) {
+g.x += dx * dt * 2;
+g.y += dy * dt * 2;
+}
+});
+}
+if(e.type === 'mine') {
+this.ghosts.forEach(g => {
+if(Math.hypot(e.x - g.x, e.y - g.y) < 1) {
+g.dead = true; g.respawnTimer = 5;
+e.life = 0;
+this.shake = 1;
+for(let k=0; k<10; k++) this.particles.push({x:e.x*TILE_SIZE, y:e.y*TILE_SIZE, vx:(this.rng()-0.5)*5, vy:(this.rng()-0.5)*5, life:1, color:'#fa0'});
+}
+});
+}
+if(e.life <= 0) this.entities.splice(i, 1);
+}
+document.getElementById('score').innerText = this.score;
+document.getElementById('floor').innerText = this.floor;
+document.getElementById('hp').innerText = Math.ceil(this.player.health);
+document.getElementById('maxHp').innerText = this.player.maxHealth;
+document.getElementById('healthFill').style.width = (this.player.health/this.player.maxHealth*100)+'%';
+document.getElementById('dashFill').style.width = Math.min(100, (1 - this.player.dashCooldown/3)*100)+'%';
+if(this.player.activeItem) {
+const card = CARDS[this.player.activeItem];
+document.getElementById('activeName').innerText = card.name;
+document.getElementById('activeIcon').innerText = Math.ceil(this.player.activeCooldown) > 0 ? Math.ceil(this.player.activeCooldown) : 'E';
+document.getElementById('fillUlt').style.height = (1 - (this.player.activeCooldown/card.cd))*100+'%';
+document.getElementById('btnUlt').style.opacity = this.player.activeCooldown <= 0 ? 1 : 0.5;
+} else {
+document.getElementById('activeName').innerText = 'none';
+document.getElementById('activeIcon').innerText = '-';
+document.getElementById('fillUlt').style.height = '0%';
+document.getElementById('btnUlt').style.opacity = 0.5;
+}
+}
+draw() {
+ctx.fillStyle = this.colors.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+if(this.state !== 'playing') return;
+const tx = this.player.x * TILE_SIZE - canvas.width/2;
+const ty = this.player.y * TILE_SIZE - canvas.height/2;
+this.camera.x += (tx - this.camera.x) * 0.1;
+this.camera.y += (ty - this.camera.y) * 0.1;
+const mapPixelWidth = MAZE_WIDTH * TILE_SIZE;
+const mapPixelHeight = MAZE_HEIGHT * TILE_SIZE;
+let ox = -this.camera.x;
+let oy = -this.camera.y;
+if (mapPixelWidth < canvas.width) ox = (canvas.width - mapPixelWidth) / 2;
+else ox = -Math.max(0, Math.min(this.camera.x, mapPixelWidth - canvas.width));
+if (mapPixelHeight < canvas.height) oy = (canvas.height - mapPixelHeight) / 2;
+else oy = -Math.max(0, Math.min(this.camera.y, mapPixelHeight - canvas.height));
+if(this.shake > 0) {
+ox += (Math.random() - 0.5) * this.shake * 20;
+oy += (Math.random() - 0.5) * this.shake * 20;
+}
+const startX = Math.floor(-ox/TILE_SIZE), endX = startX + canvas.width/TILE_SIZE + 1;
+const startY = Math.floor(-oy/TILE_SIZE), endY = startY + canvas.height/TILE_SIZE + 1;
+for(let y=startY; y<endY; y++) {
+for(let x=startX; x<endX; x++) {
+if(y>=0 && y<MAZE_HEIGHT && x>=0 && x<MAZE_WIDTH) {
+const sx = ox + x*TILE_SIZE, sy = oy + y*TILE_SIZE;
+const tile = this.maze[y][x];
+if(tile === 1) {
+ctx.strokeStyle = this.colors.wall; ctx.lineWidth = 2; ctx.strokeRect(sx, sy, TILE_SIZE, TILE_SIZE);
+} else if(tile === 2) {
+ctx.fillStyle = 'rgba(0, 255, 255, 0.2)'; ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+} else if(tile === 3) {
+ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+}
+}
+}
+}
+ctx.fillStyle = this.colors.pellet;
+this.pellets.forEach(p => {
+const sx = ox + p.x*TILE_SIZE + TILE_SIZE/2, sy = oy + p.y*TILE_SIZE + TILE_SIZE/2;
+if(sx>-10 && sx<canvas.width+10 && sy>-10 && sy<canvas.height+10) {
+ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 7); ctx.fill();
+}
+});
+const pulse = Math.sin(Date.now()/150)*2;
+this.powerPellets.forEach(p => {
+const sx = ox + p.x*TILE_SIZE + TILE_SIZE/2, sy = oy + p.y*TILE_SIZE + TILE_SIZE/2;
+ctx.fillStyle = this.colors.power; ctx.shadowBlur = 10; ctx.shadowColor = this.colors.power;
+ctx.beginPath(); ctx.arc(sx, sy, 6+pulse, 0, 7); ctx.fill();
+ctx.shadowBlur = 0;
+});
+this.entities.forEach(e => {
+const sx = ox + e.x*TILE_SIZE + TILE_SIZE/2, sy = oy + e.y*TILE_SIZE + TILE_SIZE/2;
+if(e.type === 'decoy') {
+ctx.fillStyle = '#0ff'; ctx.globalAlpha = 0.6;
+ctx.beginPath(); ctx.arc(sx, sy, TILE_SIZE/2, 0, 7); ctx.fill();
+ctx.globalAlpha = 1;
+}
+if(e.type === 'blackhole') {
+ctx.fillStyle = '#000'; ctx.strokeStyle = '#f0f'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.arc(sx, sy, TILE_SIZE, 0, 7); ctx.fill(); ctx.stroke();
+}
+if(e.type === 'mine') {
+ctx.fillStyle = '#f00';
+ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 7); ctx.fill();
+}
+});
+this.ghosts.forEach(g => g.draw(ctx, ox, oy));
+const px = ox + this.player.x*TILE_SIZE + TILE_SIZE/2;
+const py = oy + this.player.y*TILE_SIZE + TILE_SIZE/2;
+if(this.player.invulnTimer > 0 && Math.floor(Date.now()/100)%2) ctx.globalAlpha = 0.5;
+if(this.player.intangible > 0) ctx.globalAlpha = 0.3;
+ctx.save(); ctx.translate(px, py);
+let rot = 0;
+if(this.player.dirX<0) rot = Math.PI;
+if(this.player.dirY>0) rot = Math.PI/2;
+if(this.player.dirY<0) rot = -Math.PI/2;
+ctx.rotate(rot);
+ctx.fillStyle = this.player.colorOverride || (this.player.stats.glitch ? `hsl(${Date.now()%360}, 100%, 50%)` : this.colors.pellet);
+if(this.player.powerMode) { ctx.shadowBlur = 15; ctx.shadowColor = this.colors.pellet; }
+const mouth = Math.abs(Math.sin(Date.now()/100))*0.5;
+const size = TILE_SIZE/2 * this.player.stats.size;
+ctx.beginPath(); ctx.arc(0, 0, size - 1, mouth, Math.PI*2-mouth); ctx.lineTo(0,0); ctx.fill();
+ctx.shadowBlur = 0;
+if(this.player.shieldActive || this.player.stats.guardian) {
+ctx.strokeStyle = this.colors.ui; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.arc(0,0, size + 2, 0, 7); ctx.stroke();
+}
+ctx.restore(); ctx.globalAlpha = 1;
+this.particles.forEach(p => {
+ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+ctx.fillRect(ox+p.x, oy+p.y, 4, 4);
+});
+ctx.globalAlpha = 1;
+}
+levelComplete() {
+audio.sfxWin();
+if(this.player.stats.greed) this.score += Math.floor(this.player.powerTimer * 100);
+if(this.player.stats.interest) this.score += Math.floor(this.score * 0.1);
+if(this.player.stats.pacifist && this.killsThisFloor === 0) this.score *= 3;
+if(this.player.stats.consistency && !this.damageThisFloor) this.score = Math.floor(this.score * 1.2);
+this.floor++;
+this.state = 'upgrade';
+this.showScreen('upgradeContent');
+const keys = Object.keys(CARDS);
+const choices = [];
+let attempts = 0;
+while(choices.length < 3 && attempts < 100) {
+attempts++;
+const k = keys[Math.floor(this.rng()*keys.length)];
+if(!choices.includes(k)) {
+if(CARDS[k].type === 'active' && this.player.activeItem) continue;
+choices.push(k);
+}
+}
+if(choices.length < 3) {
+keys.forEach(k => {
+if(choices.length < 3 && !choices.includes(k)) choices.push(k);
+});
+}
+document.getElementById('upgradeContent').innerHTML = `
+<div class="title">floor ${this.floor-1} cleared</div>
+<div class="upgrade-grid">
+${choices.map(k => `
+<div class="upgrade-card" onclick="game.pickUpgrade('${k}')">
+<div class="upgrade-header">
+<span class="upgrade-name">${CARDS[k].name}</span>
+<span class="upgrade-type type-${CARDS[k].type}">${CARDS[k].type}</span>
+</div>
+<div class="upgrade-desc">${CARDS[k].desc}</div>
+</div>
+`).join('')}
+</div>
+`;
+}
+pickUpgrade(key) {
+const card = CARDS[key];
+if(card.type === 'active') {
+this.player.activeItem = key;
+this.player.activeCooldown = 0;
+} else {
+card.apply(this.player);
+if(this.player.stats.collector) this.player.stats.baseMult += 1;
+}
+this.player.cards.push(key);
+this.generateFloor();
+this.state = 'playing';
+document.getElementById('overlay').classList.add('hidden');
+}
+gameOver() {
+this.state = 'gameover';
+if(this.score > this.highScore) {
+this.highScore = this.score;
+localStorage.setItem('mazeRunnerHighScore', this.highScore);
+document.getElementById('menuHighScore').innerText = this.highScore;
+}
+const timeMs = Date.now() - this.startTime;
+const mins = Math.floor(timeMs / 60000);
+const secs = Math.floor((timeMs % 60000) / 1000);
+const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+document.getElementById('finalScore').innerText = this.score;
+document.getElementById('finalFloor').innerText = this.floor;
+document.getElementById('finalTime').innerText = timeStr;
+document.getElementById('finalHits').innerText = this.hitsTaken;
+this.showScreen('gameOverContent');
+}
+shareResults() {
+const text = `kukuru chase\nscore: ${this.score}\nfloor: ${this.floor}\ntime: ${document.getElementById('finalTime').innerText}\nseed: ${this.seed}`;
+navigator.clipboard.writeText(text).then(() => alert('results copied to clipboard!'));
+}
+downloadResults() {
+const tempCanvas = document.createElement('canvas');
+tempCanvas.width = 600;
+tempCanvas.height = 400;
+const tCtx = tempCanvas.getContext('2d');
+tCtx.fillStyle = this.colors.bg;
+tCtx.fillRect(0, 0, 600, 400);
+tCtx.strokeStyle = this.colors.ui;
+tCtx.lineWidth = 5;
+tCtx.strokeRect(0, 0, 600, 400);
+tCtx.font = '40px "VT323", monospace';
+tCtx.fillStyle = this.colors.accent;
+tCtx.textAlign = 'center';
+tCtx.fillText('kukuru chase results', 300, 60);
+tCtx.font = '30px "VT323", monospace';
+tCtx.fillStyle = this.colors.ui;
+tCtx.fillText(`score: ${this.score}`, 300, 120);
+tCtx.fillStyle = this.colors.pellet;
+tCtx.fillText(`floor: ${this.floor}`, 300, 170);
+tCtx.fillStyle = this.colors.accent;
+tCtx.fillText(`time: ${document.getElementById('finalTime').innerText}`, 300, 220);
+tCtx.fillStyle = this.colors.text;
+tCtx.fillText(`hits taken: ${this.hitsTaken}`, 300, 270);
+tCtx.fillStyle = '#888';
+tCtx.font = '20px "VT323", monospace';
+tCtx.fillText(`seed: ${this.seed}`, 300, 350);
+const link = document.createElement('a');
+link.download = `kukuru-chase-${Date.now()}.jpg`;
+link.href = tempCanvas.toDataURL('image/jpeg');
+link.click();
+}
+loop() {
+const now = Date.now();
+const dt = Math.min((now - this.lastTime) / 1000, 0.1);
+this.lastTime = now;
+this.update(dt);
+this.draw();
+this.animationFrameId = requestAnimationFrame(() => this.loop());
+}
+}
+const game = new Game();
+resizeCanvas();
+</script>
 </body>
 </html>
