@@ -33,7 +33,7 @@ if you are using a mobile phone, there will automatically be an on-screen contro
 
 ## how to play the game
 
-1.  download the `index.html` file.
+1. download the `index.html` file from releases.
 2.  double click on it to open it in your web browser.
 3.  that's it!
 
